@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Viewer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .page-preview {
+            display: block;
+            max-width: 100%;
+            max-height: 90vh;
+            height: auto;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .embed-container {
+            width: 100%;
+            height: 90vh;
+        }
+        .embed-container embed {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="container mt-4">
+    <h2 class="mb-4">Viewing Document: {{ file.filename }}</h2>
+
+    {% if is_admin and full_pdf %}
+        <h3>Admin Access (Full PDF)</h3>
+        <div class="embed-container">
+            <embed src="{{ full_pdf }}" type="application/pdf">
+        </div>
+    {% elif preview_image %}
+        <h3>User Access (Preview Only)</h3>
+        <img src="{{ preview_image }}" alt="Preview Image" class="page-preview">
+        <p>You are seeing only the first page preview.</p>
+    {% else %}
+        <p class="text-danger">Unable to load preview.</p>
+    {% endif %}
+</body>
+</html>

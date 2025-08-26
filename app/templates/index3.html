@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-3">Document List</h3>
+
+<input class="form-control mb-3" id="searchInput" type="text" placeholder="Search documents...">
+
+<table class="table table-bordered table-striped">
+  <thead class="table-dark">
+    <tr>
+      <th>Filename</th>
+      <th>Type</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="docTable">
+    {% for file in files %}
+    <tr>
+      <td>{{ file }}</td>
+      <td>{{ file.split('.')[-1].upper() }}</td>
+      <td>
+        <a href="/view/{{ file }}" class="btn btn-sm btn-primary">View</a>
+        <a href="/admin/delete/{{ file }}" class="btn btn-sm btn-danger">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a class="btn btn-success" href="/upload">Upload New Document</a>
+
+<nav>
+  <ul class="pagination">
+    {% for p in range(1, total_pages + 1) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link" href="/?page={{ p }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
+
+
+<script>
+  const input = document.getElementById("searchInput");
+  input.addEventListener("keyup", function () {
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll("#docTable tr");
+    rows.forEach(row => {
+      const filename = row.cells[0].textContent.toLowerCase();
+      row.style.display = filename.includes(filter) ? "" : "none";
+    });
+  });
+</script>
+{% endblock %}
+
+{% if request.session.get("role") in ["admin", "superadmin"] %}
+    <a href="/delete/{{ doc.id }}" class="btn btn-danger btn-sm">Delete</a>
+{% endif %}

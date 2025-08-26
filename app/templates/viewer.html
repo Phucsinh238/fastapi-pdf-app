@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>Preview First Page</h4>
+
+{% if file.endswith(".pdf") %}
+<embed src="{{ file }}#page=1" width="100%" height="600px" type="application/pdf" />
+{% elif file.endswith(".docx") %}
+<p><i>Word preview not supported in browser – use backend parsing</i></p>
+{% elif file.endswith(".xlsx") %}
+<p><i>Excel preview not supported in browser – use backend parsing</i></p>
+{% elif file.endswith(".pptx") %}
+<p><i>PowerPoint preview not supported in browser – use backend parsing</i></p>
+{% else %}
+<p>File not supported</p>
+{% endif %}
+
+<a href="/" class="btn btn-secondary mt-3">Back</a>
+{% endblock %}

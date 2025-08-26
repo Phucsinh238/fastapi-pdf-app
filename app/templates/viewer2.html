@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Viewing File: {{ filename }}</h3>
+<iframe src="/uploads/{{ filename }}" width="100%" height="600px"></iframe>
+{% endblock %}

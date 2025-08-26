@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+passlib[bcrypt]
+fastapi-mail
+openpyxl
+pdf2image
+pymongo

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Uploaded Files</h3>
+<ul>
+  {% for file in files %}
+  <li><a href="/view/{{ file }}">{{ file }}</a></li>
+  {% endfor %}
+</ul>
+<a class="btn btn-success" href="/upload">Upload</a>
+{% endblock %}
