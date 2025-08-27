@@ -55,7 +55,7 @@ def confirm_token(token: str, expiration: int = 3600) -> str | None:
 def convert_pdf_first_page(file_path: str, output_path: str):
     print(f"file_path and output_path: {file_path} {output_path}")
     try:
-        poppler_path = r"D:\poppler-24.08.0\Library\bin"
+        poppler_path = "/usr/bin"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         images = convert_from_path(
