@@ -107,7 +107,7 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
                    a.click();
                    // Sau 2 giây quay về trang chủ
                    setTimeout(function() {{
-                       window.location.href = "/";
+                       window.location.href = "https://fastapi-pdf-app.onrender.com/";
                    }}, 2000);
                </script>
            </body>
