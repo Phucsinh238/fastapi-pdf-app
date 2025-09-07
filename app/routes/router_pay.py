@@ -128,7 +128,8 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
 def payment_cancel(request: Request):
     # Ghi flash message vào session
     request.session["flash"] = "❌ Bạn đã hủy thanh toán."
-    referer = request.headers.get("referer", "/")  # Nếu không có thì fallback về "/"
+   # referer = request.headers.get("referer", "/")  # Nếu không có thì fallback về "/"
+    referer = "https://fastapi-pdf-app.onrender.com"
     return RedirectResponse(url=referer, status_code=303)
 
 
