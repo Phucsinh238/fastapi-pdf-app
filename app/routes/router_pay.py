@@ -21,15 +21,15 @@ def create_payment(file_id: int, request: Request):
     document = get_document_by_id(file_id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
-
+    base_url = str(request.base_url).rstrip("/")
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {
             "payment_method": "paypal"
         },
         "redirect_urls": {
-            "return_url": f"ttps://fastapi-pdf-app.onrender.com/payment/success?file_id={file_id}",
-            "cancel_url": "https://fastapi-pdf-app.onrender.com/payment/cancel"
+            "return_url": f"{base_url}/payment/success?file_id={file_id}",
+            "cancel_url": f"{base_url}/payment/cancel"
         },
         "transactions": [{
             "item_list": {
