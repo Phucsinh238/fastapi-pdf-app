@@ -91,10 +91,10 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
            raise HTTPException(status_code=404, detail="File does not exist")
     
        # Lấy domain động từ request (Render sẽ trả về đúng domain)
-        base_url = str(request.base_url).rstrip("/")
+       base_url = str(request.base_url).rstrip("/")
 
         # Nếu có referer thì quay lại, không thì về trang chủ
-        previous_url = request.headers.get("referer") or base_url
+       previous_url = request.headers.get("referer") or base_url
        
        # Trả về trang HTML có JS: tự tải file và quay lại trang chủ
        html_content = f"""
