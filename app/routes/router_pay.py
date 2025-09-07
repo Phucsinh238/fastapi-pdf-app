@@ -28,8 +28,8 @@ def create_payment(file_id: int, request: Request):
             "payment_method": "paypal"
         },
         "redirect_urls": {
-            "return_url": f"http://localhost:8000/payment/success?file_id={file_id}",
-            "cancel_url": "http://localhost:8000/payment/cancel"
+            "return_url": f"{base_url}/payment/success?file_id={file_id}",
+            "cancel_url": f"{base_url}/payment/cancel"
         },
         "transactions": [{
             "item_list": {
