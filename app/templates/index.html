@@ -19,6 +19,19 @@
     </div>
   </div>
 
+ <div class="container mt-3">
+        <div class="d-flex justify-content-end">
+            {% if request.state.current_user %}
+                👤 Logged in as <b>{{ request.state.current_user.username }}</b>
+                (role: {{ request.state.current_user.role }})
+            {% else %}
+                🚪 Not logged in
+            {% endif %}
+        </div>
+        <hr>
+        {% block content %}{% endblock %}
+    </div>
+  
   {% if request.session.get("role") in ["admin", "superadmin"] %}
     <div class="mb-3">
       <a href="/upload" class="btn btn-success">➕ Upload New Document</a>
