@@ -94,7 +94,8 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
        base_url = str(request.base_url).rstrip("/")
 
         # Nếu có referer thì quay lại, không thì về trang chủ
-       previous_url = request.headers.get("referer") or base_url
+       # previous_url = request.headers.get("referer") or base_url
+       previous_url = "https://fastapi-pdf-app.onrender.com"
        
        # Trả về trang HTML có JS: tự tải file và quay lại trang chủ
        html_content = f"""
