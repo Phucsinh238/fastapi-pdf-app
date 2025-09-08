@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from app.routes import auth, admin, viewer
 from starlette.middleware.sessions import SessionMiddleware
 from app.routes import router_pay
+from fastapi import Request
 
 app = FastAPI()
 
@@ -23,6 +24,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_current_user(request: Request, call_next):
+    user = None
+    if "user" in request.session:
+        user = {
+            "username": request.session.get("user"),
+            "role": request.session.get("role")
+        }
+    request.state.current_user = user
+    response = await call_next(request)
+    return response
+
 
 # app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
