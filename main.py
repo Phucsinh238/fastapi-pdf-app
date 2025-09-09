@@ -7,7 +7,18 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.routes import router_pay
 from fastapi import Request
 
+# app/main.py
+
+from app.database import Base, engine
+from app.models import User, Document, LoginLog, AccessLog
+
 app = FastAPI()
+
+# Tự động tạo bảng khi chạy lần đầu
+Base.metadata.create_all(bind=engine)
+
+
+
 
 @app.middleware("http")
 async def add_current_user(request: Request, call_next):
