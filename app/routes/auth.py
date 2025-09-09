@@ -60,8 +60,10 @@ async def register(
     conn.close()
 
     # Gửi email xác thực
+    base_url = str(request.base_url).rstrip("/")
     token = generate_confirmation_token(email)
-    verify_url = f"http://localhost:8000/verify?token={token}"
+    verify_url = f"{base_url}/verify?token={token}"
+
     html = f"""
     <p>Hello {username},</p>
     <p>Click to activate your account:</p>
