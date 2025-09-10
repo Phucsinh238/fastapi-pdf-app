@@ -5,7 +5,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 import sqlite3
 import hashlib
-
+from app.database import SessionLocal
+from app.models import User
 from app.utils import generate_confirmation_token, confirm_token
 
 from fastapi import Depends, HTTPException, status
@@ -43,21 +44,29 @@ async def register(
     email: str = Form(...),
     password: str = Form(...)
 ):
+    db = SessionLocal()
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
-    conn = sqlite3.connect("app/document.db")
-    cur = conn.cursor()
+
+    new_user = User(
+        username=username,
+        email=email,
+        password=hashed_password,
+        active=False,
+        role="user"
+    )
 
     try:
-        cur.execute("INSERT INTO users (username, email, password, active, role) VALUES (?, ?, ?, ?, ?)",(username, email, hashed_password, 0, "user"))
-        conn.commit()
-    except sqlite3.IntegrityError:
-        conn.close()
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception:
+        db.rollback()
         return templates.TemplateResponse("register.html", {
             "request": request,
             "error": "Username or Email already exists."
         })
-
-    conn.close()
+    finally:
+        db.close()
 
     # Gửi email xác thực
     base_url = str(request.base_url).rstrip("/")
