@@ -18,38 +18,37 @@ from ..utils import convert_pdf_first_page
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+from sqlalchemy import text
+from app.database import engine  # đã config PostgreSQL trong database.py
 
 
 
-
-
-
-ITEMS_PER_PAGE = 5  # Số tài liệu mỗi trang
+ITEMS_PER_PAGE = 10  # số tài liệu mỗi trang
 
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request, page: int = Query(1, ge=1)):
-    conn = sqlite3.connect("app/document.db")
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
+    with engine.connect() as conn:
+        # Đếm tổng số tài liệu
+        result = conn.execute(text("SELECT COUNT(*) FROM documents"))
+        total_docs = result.scalar()  # lấy giá trị duy nhất
 
-    # Đếm tổng số tài liệu
-    cur.execute("SELECT COUNT(*) FROM documents")
-    total_docs = cur.fetchone()[0]
+        # Tính offset và total_pages
+        total_pages = math.ceil(total_docs / ITEMS_PER_PAGE) if total_docs else 1
+        offset = (page - 1) * ITEMS_PER_PAGE
 
-    # Tính offset và total_pages
-    total_pages = math.ceil(total_docs / ITEMS_PER_PAGE)
-    offset = (page - 1) * ITEMS_PER_PAGE
-
-    # Lấy dữ liệu phân trang
-    cur.execute("""
-        SELECT * FROM documents
-        ORDER BY upload_time DESC
-        LIMIT ? OFFSET ?
-    """, (ITEMS_PER_PAGE, offset))
-    documents = cur.fetchall()
-    conn.close()
+        # Lấy dữ liệu phân trang
+        result = conn.execute(
+            text("""
+                SELECT * FROM documents
+                ORDER BY upload_time DESC
+                LIMIT :limit OFFSET :offset
+            """),
+            {"limit": ITEMS_PER_PAGE, "offset": offset}
+        )
+        documents = result.mappings().all()  # trả về list[dict]
 
     flash = request.session.pop("flash", None)
+ 
 
     return templates.TemplateResponse("index.html", {
         "request": request,
