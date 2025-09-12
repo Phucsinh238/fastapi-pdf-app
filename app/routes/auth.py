@@ -118,7 +118,7 @@ async def verify_email(request: Request, token: str):
     try:
         with engine.begin() as conn:
             conn.execute(
-                text("UPDATE users SET active = 1 WHERE email = :email"),
+                text("UPDATE users SET active = true WHERE email = :email"),
                 {"email": email}
             )
 
