@@ -16,6 +16,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 from datetime import datetime
 
+from sqlalchemy import text
+import hashlib
+
+from app.database import engine  # file database.py đã cấu hình SQLAlchemy engine
+from app.utils import confirm_token  # hàm confirm_token của bạn
+from app.templates import templates  # Jinja templates loader
+
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -95,24 +103,36 @@ async def register(
     })
 
 
+
+# -----------------------------
+# Xác thực email
+# -----------------------------
 @router.get("/verify", response_class=HTMLResponse)
 async def verify_email(request: Request, token: str):
     email = confirm_token(token)
     if not email:
         return HTMLResponse("<h3>❌ Invalid or expired token.</h3>", status_code=400)
 
-    conn = sqlite3.connect("app/document.db")
-    cur = conn.cursor()
-    cur.execute("UPDATE users SET active = 1 WHERE email = ?", (email,))
-    conn.commit()
-    conn.close()
+    with engine.begin() as conn:
+        conn.execute(
+            text("UPDATE users SET active = 1 WHERE email = :email"),
+            {"email": email}
+        )
 
     return HTMLResponse("<h3>✅ Email verified! You can now <a href='/login'>login</a>.</h3>")
 
+
+# -----------------------------
+# Form login
+# -----------------------------
 @router.get("/login", response_class=HTMLResponse)
 async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
+
+# -----------------------------
+# Xử lý login
+# -----------------------------
 @router.post("/login")
 async def login(
     request: Request,
@@ -120,24 +140,27 @@ async def login(
     password: str = Form(...)
 ):
     hashed = hashlib.sha256(password.encode()).hexdigest()
-    conn = sqlite3.connect("app/document.db")
-    cur = conn.cursor()
-    cur.execute("SELECT username, password, active, role FROM users WHERE username = ?", (username,))
-    user = cur.fetchone()
-    conn.close()
 
-    if not user:
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT username, password, active, role FROM users WHERE username = :username"),
+            {"username": username}
+        ).fetchone()
+
+    if not result:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    if user[1] != hashed:
+
+    db_username, db_password, db_active, db_role = result
+
+    if db_password != hashed:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    if user[2] != 1:
+    if db_active != 1:
         raise HTTPException(status_code=403, detail="Account not activated")
 
-    request.session["user"] = user[0]
-    request.session["role"] = user[3]
+    request.session["user"] = db_username
+    request.session["role"] = db_role
+
     return RedirectResponse(url="/", status_code=302)
-
-
 
 
 
