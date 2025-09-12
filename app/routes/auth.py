@@ -21,7 +21,7 @@ import hashlib
 
 from app.database import engine  # file database.py đã cấu hình SQLAlchemy engine
 from app.utils import confirm_token  # hàm confirm_token của bạn
-from app.templates import templates  # Jinja templates loader
+#from app.templates import templates  # Jinja templates loader
 
 
 router = APIRouter()
