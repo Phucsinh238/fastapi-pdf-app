@@ -107,19 +107,27 @@ async def register(
 # -----------------------------
 # Xác thực email
 # -----------------------------
+
+
 @router.get("/verify", response_class=HTMLResponse)
 async def verify_email(request: Request, token: str):
     email = confirm_token(token)
     if not email:
         return HTMLResponse("<h3>❌ Invalid or expired token.</h3>", status_code=400)
 
-    with engine.begin() as conn:
-        conn.execute(
-            text("UPDATE users SET active = 1 WHERE email = :email"),
-            {"email": email}
-        )
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                text("UPDATE users SET active = 1 WHERE email = :email"),
+                {"email": email}
+            )
 
-    return HTMLResponse("<h3>✅ Email verified! You can now <a href='/login'>login</a>.</h3>")
+        return HTMLResponse("<h3>✅ Email verified! You can now <a href='/login'>login</a>.</h3>")
+
+    except Exception as e:
+        # In ra log cho dễ debug
+        return HTMLResponse(f"<h3>❌ Error: {str(e)}</h3>", status_code=500)
+
 
 
 # -----------------------------
