@@ -30,29 +30,17 @@ def get_db():
 
 
 
-#def get_document_by_id(doc_id: int):
-#    db = get_db()
-#    cursor = db.cursor()
-#    cursor.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
-#    row = cursor.fetchone()
-#    if row:
-#        return {
- #           "id": row[0],
- #           "filename": row[1],
- #           "filepath": row[2],
- #           "upload_time": row[3],
-  #      }
-   # return None
-
-
 def get_document_by_id(doc_id: int):
-    with engine.connect() as conn:
-        result = conn.execute(
-            text("SELECT id, filename, filepath, upload_time FROM documents WHERE id = :id"),
-            {"id": doc_id}
-        )
-        row = result.mappings().first()
-
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM documents WHERE id = ?", (doc_id,))
+    row = cursor.fetchone()
     if row:
-        return dict(row)
+        return {
+            "id": row[0],
+            "filename": row[1],
+            "filepath": row[2],
+            "upload_time": row[3],
+        }
     return None
+
