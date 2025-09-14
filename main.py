@@ -6,13 +6,17 @@ from app.routes import auth, admin, viewer
 from starlette.middleware.sessions import SessionMiddleware
 from app.routes import router_pay
 from fastapi import Request
-
+import r2_test   # vì nằm ngang cấp nên import trực tiếp
 # app/main.py
 
 from app.database import Base, engine
 from app.models import User, Document, LoginLog, AccessLog
 
 app = FastAPI()
+
+# include router từ r2_test
+app.include_router(r2_test.router)
+
 
 # Tự động tạo bảng khi chạy lần đầu
 Base.metadata.create_all(bind=engine)
