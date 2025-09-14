@@ -1,20 +1,19 @@
-from fastapi import APIRouter
-import boto3
 import os
-from io import BytesIO
-
-router = APIRouter()
+import boto3
+from botocore.exceptions import ClientError
 
 # ==============================
 # 🔧 Config Cloudflare R2
 # ==============================
-R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY")
-R2_SECRET_KEY = os.getenv("R2_SECRET_KEY")
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "bcd766b6e3d7d90bf451671a1d7c3de")
+R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY", "YOUR_ACCESS_KEY")
+R2_SECRET_KEY = os.getenv("R2_SECRET_KEY", "YOUR_SECRET_KEY")
 R2_BUCKET = os.getenv("R2_BUCKET", "fastapi-pdf-app")
 
-# ✅ Dùng endpoint r2.dev thay vì account_id
-R2_ENDPOINT = f"https://{R2_BUCKET}.r2.dev"
+# Endpoint chuẩn cho boto3
+R2_ENDPOINT = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
+# Tạo client
 s3 = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT,
@@ -23,18 +22,34 @@ s3 = boto3.client(
 )
 
 # ==============================
-# 🧪 Test APIs
+# 🧪 Test Upload & Download
 # ==============================
-@router.get("/r2/upload-test")
-def upload_test():
-    data = b"Hello from Render + Cloudflare R2!"
-    s3.upload_fileobj(BytesIO(data), R2_BUCKET, "test.txt")
-    return {"message": "✅ Uploaded test.txt to R2"}
 
-@router.get("/r2/download-test")
-def download_test():
-    buffer = BytesIO()
-    s3.download_fileobj(R2_BUCKET, "test.txt", buffer)
-    buffer.seek(0)
-    content = buffer.read().decode("utf-8")
-    return {"message": "✅ Downloaded test.txt from R2", "content": content}
+def test_r2():
+    try:
+        # 1. Tạo file test.txt local
+        with open("test.txt", "w") as f:
+            f.write("Hello from Cloudflare R2!")
+        print("📄 Created local file test.txt")
+
+        # 2. Upload lên bucket
+        s3.upload_file("test.txt", R2_BUCKET, "test.txt")
+        print("✅ Uploaded test.txt to R2")
+
+        # 3. Download từ R2 về (đặt tên mới)
+        s3.download_file(R2_BUCKET, "test.txt", "downloaded_test.txt")
+        print("✅ Downloaded test.txt from R2")
+
+        # 4. Kiểm tra nội dung file tải về
+        with open("downloaded_test.txt", "r") as f:
+            content = f.read()
+        print("📥 Downloaded file content:", content)
+
+        return {"status": "success", "content": content}
+
+    except ClientError as e:
+        print("❌ Boto3 ClientError:", e)
+        return {"status": "error", "details": str(e)}
+    except Exception as e:
+        print("❌ Unexpected Error:", e)
+        ret
