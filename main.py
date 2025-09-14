@@ -15,7 +15,7 @@ from app.models import User, Document, LoginLog, AccessLog
 app = FastAPI()
 
 # include router từ r2_test
-app.include_router(r2_test.router)
+#app.include_router(r2_test.router)
 
 
 # Tự động tạo bảng khi chạy lần đầu
