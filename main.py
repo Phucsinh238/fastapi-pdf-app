@@ -12,10 +12,13 @@ import r2_test   # vì nằm ngang cấp nên import trực tiếp
 from app.database import Base, engine
 from app.models import User, Document, LoginLog, AccessLog
 
+from r2_router import router as r2_router
+
 app = FastAPI()
 
-# include router từ r2_test
-#app.include_router(r2_test.router)
+# Gắn router R2
+app.include_router(r2_router)
+
 
 
 # Tự động tạo bảng khi chạy lần đầu
