@@ -12,7 +12,8 @@ R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY", "da77dbc893cb7a2b6658b8e84518b3")
 R2_SECRET_KEY = os.getenv("R2_SECRET_KEY", "d73e0c0337a3b2aefce9b2a5bca2750530475ea135089e2386e397abe743")
 R2_BUCKET = os.getenv("R2_BUCKET", "fastapi-pdf-app")
 
-R2_ENDPOINT = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+# Dùng endpoint r2.dev thay cho cloudflarestorage.com
+R2_ENDPOINT = f"https://{R2_BUCKET}.r2.dev"
 
 s3 = boto3.client(
     "s3",
