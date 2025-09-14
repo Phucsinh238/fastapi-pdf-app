@@ -43,3 +43,4 @@ uvicorn==0.34.3
 itsdangerous>=2.1.2
 sqlalchemy
 psycopg2-binary
+boto3
