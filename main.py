@@ -6,12 +6,8 @@ from app.routes import auth, admin, viewer
 from starlette.middleware.sessions import SessionMiddleware
 from app.routes import router_pay
 from fastapi import Request
-
-# app/main.py
-
 from app.database import Base, engine
 from app.models import User, Document, LoginLog, AccessLog
-
 from r2_router import router as r2_router
 
 app = FastAPI()
