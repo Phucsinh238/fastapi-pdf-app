@@ -6,7 +6,7 @@ from app.routes import auth, admin, viewer
 from starlette.middleware.sessions import SessionMiddleware
 from app.routes import router_pay
 from fastapi import Request
-import r2_test   # vì nằm ngang cấp nên import trực tiếp
+
 # app/main.py
 
 from app.database import Base, engine
