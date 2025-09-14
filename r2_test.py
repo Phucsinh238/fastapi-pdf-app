@@ -6,17 +6,15 @@ from io import BytesIO
 router = APIRouter()
 
 # ==============================
-# 🔧 Config Cloudflare R2 (Render lấy từ Environment Variables)
+# 🔧 Config Cloudflare R2
 # ==============================
-R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "bcd766b6e3d7d90bf451671a1d7c3de")
-R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY", "da77dbc893cb7a2b6658b8e84518b3")
-R2_SECRET_KEY = os.getenv("R2_SECRET_KEY", "d73e0c0337a3b2aefce9b2a5bca2750530475ea135089e2386e397abe743")
+R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY")
+R2_SECRET_KEY = os.getenv("R2_SECRET_KEY")
 R2_BUCKET = os.getenv("R2_BUCKET", "fastapi-pdf-app")
 
-# Endpoint R2 (Cloudflare)
-R2_ENDPOINT = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+# ✅ Dùng endpoint r2.dev thay vì account_id
+R2_ENDPOINT = f"https://{R2_BUCKET}.r2.dev"
 
-# Tạo client boto3
 s3 = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT,
@@ -27,17 +25,14 @@ s3 = boto3.client(
 # ==============================
 # 🧪 Test APIs
 # ==============================
-
 @router.get("/r2/upload-test")
 def upload_test():
-    """Upload file test.txt vào R2"""
     data = b"Hello from Render + Cloudflare R2!"
     s3.upload_fileobj(BytesIO(data), R2_BUCKET, "test.txt")
     return {"message": "✅ Uploaded test.txt to R2"}
 
 @router.get("/r2/download-test")
 def download_test():
-    """Download file test.txt từ R2"""
     buffer = BytesIO()
     s3.download_fileobj(R2_BUCKET, "test.txt", buffer)
     buffer.seek(0)
