@@ -3,13 +3,17 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-R2_ACCESS_KEY = "da77dbc893cb7a2b6658b8e84518b3"
-R2_SECRET_KEY = "d73e0c0337a3b2aefce9b2a5bca2750530475ea135089e2386e397abe743"
+# ==============================
+# 🔧 Config Cloudflare R2
+# ==============================
+R2_ACCESS_KEY = "al6cc8fb6c39f659e9d2f3e219a4bd"
+R2_SECRET_KEY = "49bc8e7eaa6ff1edb88312346373914a2d83d4ca209ae700a4a379f77c34b"
 R2_BUCKET = "fastapi-pdf-app"
 
-# ✅ Dùng r2.dev thay cho cloudflarestorage.com
-R2_ENDPOINT = f"https://{R2_BUCKET}.r2.dev"
+# Endpoint Cloudflare R2 (anh copy từ dashboard)
+R2_ENDPOINT = "https://bcd766b6e3d7d90bf451671a1d7c3de.r2.cloudflarestorage.com"
 
+# Tạo client kết nối S3
 s3 = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT,
@@ -17,21 +21,39 @@ s3 = boto3.client(
     aws_secret_access_key=R2_SECRET_KEY,
 )
 
-@router.get("/r2/test")
-def test_r2():
-    try:
-        # Upload thử
-        s3.put_object(Bucket=R2_BUCKET, Key="test.txt", Body=b"Hello from Render + R2!")
+# ==============================
+# 🧪 API Test Upload & Download
+# ==============================
 
-        # Lấy file về
-        obj = s3.get_object(Bucket=R2_BUCKET, Key="test.txt")
-        content = obj["Body"].read().decode("utf-8")
+@router.get("/r2/upload-test")
+def upload_test():
+    try:
+        # 1. Tạo file test.txt trong container Render
+        with open("test.txt", "w") as f:
+            f.write("Hello from Render -> Cloudflare R2!")
+
+        # 2. Upload file
+        s3.upload_file("test.txt", R2_BUCKET, "test.txt")
+
+        return {"status": "success", "message": "✅ Uploaded test.txt to Cloudflare R2"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.get("/r2/download-test")
+def download_test():
+    try:
+        # 1. Download file từ R2 về container Render
+        s3.download_file(R2_BUCKET, "test.txt", "downloaded_test.txt")
+
+        # 2. Đọc lại nội dung
+        with open("downloaded_test.txt", "r") as f:
+            content = f.read()
 
         return {
             "status": "success",
-            "bucket": R2_BUCKET,
+            "message": "✅ Downloaded file from Cloudflare R2",
             "content": content,
-            "public_url": f"https://{R2_BUCKET}.r2.dev/test.txt"
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
