@@ -54,4 +54,6 @@ def download_test():
         with open("downloaded_test.txt", "r") as f:
             content = f.read()
 
-        return {"st
+        return {"status": "success", "content": content}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
