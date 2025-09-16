@@ -8,12 +8,12 @@ from app.routes import router_pay
 from fastapi import Request
 from app.database import Base, engine
 from app.models import User, Document, LoginLog, AccessLog
-from r2_router import router as r2_router
+import r2_router
 
 app = FastAPI()
 
 # Gắn router R2
-app.include_router(r2_router)
+app.include_router(r2_router.router)
 
 
 
