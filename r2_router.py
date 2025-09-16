@@ -8,9 +8,9 @@ R2_ACCESS_KEY = "al6cc8fb6c39f659e9dfe3219a4bd"
 R2_SECRET_KEY = "49bcc87eaa6ff1edb88312346373914a2d83d4ca209ae700a4a379f77c34b"
 R2_BUCKET = "fastapi-pdf-app"
 
-# ✅ Chỉ dùng account_id
-R2_ENDPOINT = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-# Nếu vẫn lỗi thì thử: R2_ENDPOINT = f"https://{R2_ACCOUNT_ID}.r2.dev"
+# ✅ Bucket phải đưa vào host
+R2_ENDPOINT = f"https://{R2_BUCKET}.{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+# Nếu vẫn lỗi, thử: R2_ENDPOINT = f"https://{R2_BUCKET}.{R2_ACCOUNT_ID}.r2.dev"
 
 s3 = boto3.client(
     "s3",
