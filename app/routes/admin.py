@@ -1,91 +1,33 @@
-
-
-from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
-from fastapi.responses import RedirectResponse, FileResponse
-from fastapi.templating import Jinja2Templates
-import shutil, os
-import openpyxl
+from fastapi import APIRouter, Request, UploadFile, Form, HTTPException
+from fastapi.responses import RedirectResponse
 from sqlalchemy import text
-from app.database import engine
 from datetime import datetime
+import boto3, os
+
+from app.database import engine
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
-UPLOAD_DIR = "app/uploads"
-UPLOAD_FOLDER = "app/uploads"
+# ==============================
+# 🔧 Config Cloudflare R2
+# ==============================
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "bcdb766b6e3d7d90bf451671a1d7c3de")
+R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY", "24bcd7f68391b74c3712d0919b6a0c66")
+R2_SECRET_KEY = os.getenv("R2_SECRET_KEY", "8eb34c1864c1e90ec42f67d0217aa2e3e7fac5225dd8b32e52b3575536ac6f4b")
+R2_BUCKET = os.getenv("R2_BUCKET", "fastapi-pdf-app")
 
+# Dùng endpoint r2.dev thay vì cloudflarestorage.com
+R2_ENDPOINT = f"https://{R2_BUCKET}.{R2_ACCOUNT_ID}.r2.dev"
 
-# 🗑️ Xóa file theo tên (admin)
-@router.get("/admin/delete/{filename}")
-def delete_file(filename: str):
-    file_path = f"{UPLOAD_DIR}/{filename}"
-    if os.path.exists(file_path):
-        os.remove(file_path)
-    return RedirectResponse(url="/", status_code=303)
-
-
-# 📤 Xuất log ra Excel
-@router.get("/admin/export-log")
-def export_log():
-    with engine.connect() as conn:
-        result = conn.execute(text("SELECT username, file, timestamp FROM access_log"))
-        rows = result.fetchall()
-
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Access Log"
-    ws.append(["Username", "File", "Timestamp"])
-
-    for row in rows:
-        ws.append(list(row))
-
-    export_path = "app/static/access_log.xlsx"
-    wb.save(export_path)
-
-    return FileResponse(
-        export_path,
-        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        filename="access_log.xlsx"
-    )
+s3 = boto3.client(
+    "s3",
+    endpoint_url=f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com",  # API gốc cho boto3
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_KEY,
+)
 
 
-# 🗑️ Xóa file theo ID (admin/superadmin)
-@router.get("/delete/{file_id}")
-def delete_file(file_id: int, request: Request):
-    role = request.session.get("role")
-
-    if role not in ["admin", "superadmin"]:
-        raise HTTPException(status_code=403, detail="You are not allowed to delete files.")
-
-    with engine.begin() as conn:
-        result = conn.execute(
-            text("SELECT filepath FROM documents WHERE id = :id"),
-            {"id": file_id}
-        )
-        row = result.fetchone()
-        if row:
-            file_path = row[0]
-            try:
-                os.remove(file_path)
-            except FileNotFoundError:
-                pass
-        conn.execute(text("DELETE FROM documents WHERE id = :id"), {"id": file_id})
-
-    return RedirectResponse(url="/", status_code=302)
-
-
-# 📤 Form upload
-@router.get("/upload")
-def upload_form(request: Request):
-    role = request.session.get("role")
-    if role not in ["admin", "superadmin"]:
-        raise HTTPException(status_code=403, detail="Only admins can upload files.")
-    
-    return templates.TemplateResponse("upload.html", {"request": request})
-
-
-# 📤 Upload file (ghi vào Postgres)
+# 📤 Upload file lên R2
 @router.post("/upload")
 async def upload_file(request: Request, file: UploadFile, folder: str = Form("")):
     role = request.session.get("role")
@@ -94,16 +36,14 @@ async def upload_file(request: Request, file: UploadFile, folder: str = Form("")
     if role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="You are not allowed to upload files.")
 
-    # Tạo thư mục upload
-    save_dir = os.path.join(UPLOAD_FOLDER, folder.replace("..", "").strip("/\\"))
-    os.makedirs(save_dir, exist_ok=True)
+    object_key = f"{folder.strip('/')}/{file.filename}" if folder else file.filename
 
-    # Lưu file vật lý
-    file_path = os.path.join(save_dir, file.filename)
-    with open(file_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+    try:
+        s3.upload_fileobj(file.file, R2_BUCKET, object_key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload to R2 failed: {e}")
 
-    # Ghi log vào database Postgres
+    # Ghi log vào Postgres
     with engine.begin() as conn:
         conn.execute(
             text("""
@@ -112,10 +52,18 @@ async def upload_file(request: Request, file: UploadFile, folder: str = Form("")
             """),
             {
                 "filename": file.filename,
-                "filepath": file_path,
+                "filepath": object_key,  # Lưu object_key thay vì path local
                 "uploaded_by": username,
                 "upload_time": datetime.utcnow()
             }
         )
 
     return RedirectResponse(url="/", status_code=302)
+
+
+# 📥 Download file từ R2 (redirect thẳng link public .r2.dev)
+@router.get("/download/{filename}")
+def download_file(filename: str):
+    # Trả về link public R2
+    file_url = f"{R2_ENDPOINT}/{filename}"
+    return {"status": "success", "url": file_url}
