@@ -38,8 +38,7 @@ def upload_form(request: Request):
         raise HTTPException(status_code=403, detail="Only admins can upload files.")
     return templates.TemplateResponse("upload.html", {"request": request})
 
-
-# 📤 Upload file (Cloudflare R2 + Postgres log)
+# 📤 Upload file (ghi vào Postgres + R2)
 @router.post("/upload")
 async def upload_file(request: Request, file: UploadFile, folder: str = Form("")):
     role = request.session.get("role")
@@ -48,34 +47,36 @@ async def upload_file(request: Request, file: UploadFile, folder: str = Form("")
     if role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="You are not allowed to upload files.")
 
+    # object_key chính là đường dẫn file trên R2
+    object_key = os.path.join(folder.strip("/\\"), file.filename) if folder else file.filename
+
+    # Upload lên R2
     try:
-        # Đường dẫn object trong bucket
-        object_key = os.path.join(folder.strip("/\\"), file.filename).replace("\\", "/")
-        
-        # Upload trực tiếp lên R2
-        s3_client.upload_fileobj(file.file, R2_BUCKET_NAME, object_key)
-
-        # Ghi log vào Postgres
-        with engine.begin() as conn:
-            conn.execute(
-                text("""
-                    INSERT INTO documents (filename, filepath, uploaded_by, upload_time)
-                    VALUES (:filename, :filepath, :uploaded_by, :upload_time)
-                """),
-                {
-                    "filename": file.filename,
-                    "filepath": f"s3://{R2_BUCKET_NAME}/{object_key}",
-                    "uploaded_by": username,
-                    "upload_time": datetime.utcnow()
-                }
-            )
-
+        s3_client.upload_fileobj(
+            file.file,
+            R2_BUCKET,
+            object_key
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload to R2 failed: {e}")
 
+    # Ghi log vào database Postgres (lưu cả r2_key)
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO documents (filename, filepath, r2_key, uploaded_by, upload_time)
+                VALUES (:filename, :filepath, :r2_key, :uploaded_by, :upload_time)
+            """),
+            {
+                "filename": file.filename,
+                "filepath": object_key,   # không lưu local nữa, lưu luôn key
+                "r2_key": object_key,     # chuẩn để xoá sau này
+                "uploaded_by": username,
+                "upload_time": datetime.utcnow()
+            }
+        )
+
     return RedirectResponse(url="/", status_code=302)
-
-
 
 
 # 🗑️ Xóa file theo ID (admin/superadmin)
@@ -87,31 +88,20 @@ def delete_file(file_id: int, request: Request):
 
     with engine.begin() as conn:
         result = conn.execute(
-            text("SELECT filename, filepath FROM documents WHERE id = :id"),
+            text("SELECT r2_key FROM documents WHERE id = :id"),
             {"id": file_id}
         )
         row = result.fetchone()
 
-        if row:
-            filename = row[0]
-            file_path = row[1]
-
-            # Xóa file local (nếu có)
+        if row and row[0]:
             try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-            except Exception as e:
-                print(f"⚠️ Lỗi khi xóa local file: {e}")
-
-            # Xóa file trên R2
-            try:
-                s3_client.delete_object(Bucket=R2_BUCKET, Key=filename)
-                print(f"✅ Deleted {filename} from R2")
+                s3_client.delete_object(Bucket=R2_BUCKET, Key=row[0])
+                print(f"✅ Deleted {row[0]} from R2")
             except Exception as e:
                 print(f"⚠️ Lỗi khi xóa file trên R2: {e}")
 
-            # Xóa record DB
-            conn.execute(text("DELETE FROM documents WHERE id = :id"), {"id": file_id})
+        conn.execute(text("DELETE FROM documents WHERE id = :id"), {"id": file_id})
 
     return RedirectResponse(url="/", status_code=302)
+
 
