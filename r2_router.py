@@ -1,40 +1,49 @@
-import boto3
 from fastapi import APIRouter
+import boto3
+from botocore.client import Config
+import os
 
 router = APIRouter(prefix="/r2", tags=["Cloudflare R2"])
 
-R2_ACCOUNT_ID = "bcd766b6e3d7d90bf451671a1d7c3de"
-R2_ACCESS_KEY = "al6cc8fb6c39f659e9dfe3219a4bd"
-R2_SECRET_KEY = "49bcc87eaa6ff1edb88312346373914a2d83d4ca209ae700a4a379f77c34b"
+# =============================
+# Cloudflare R2 Config
+# =============================
+R2_ACCESS_KEY_ID = "24bcd7f68391b74c3712d0919b6a0c66"
+R2_SECRET_ACCESS_KEY = "8eb34c1864c1e90ec42f67d0217aa2e3e7fac5225dd8b32e52b3575536ac6f4b"
 R2_BUCKET = "fastapi-pdf-app"
+R2_ENDPOINT = "https://bcdb766b6e3d7d90bf451671a1d7c3de.r2.cloudflarestorage.com"
 
-# ✅ Bucket phải đưa vào host
-R2_ENDPOINT = f"https://{R2_BUCKET}.{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-# Nếu vẫn lỗi, thử: R2_ENDPOINT = f"https://{R2_BUCKET}.{R2_ACCOUNT_ID}.r2.dev"
-
+# =============================
+# Boto3 Client
+# =============================
 s3 = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT,
-    aws_access_key_id=R2_ACCESS_KEY,
-    aws_secret_access_key=R2_SECRET_KEY,
+    aws_access_key_id=R2_ACCESS_KEY_ID,
+    aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+    config=Config(signature_version="s3v4"),
+    region_name="auto",
 )
+
+# =============================
+# Routes
+# =============================
 
 @router.get("/upload-test")
 def upload_test():
     try:
-        with open("test.txt", "w") as f:
-            f.write("Hello from Cloudflare R2 via Render!")
-        s3.upload_file("test.txt", R2_BUCKET, "test.txt")
-        return {"status": "success", "message": "Uploaded test.txt to R2"}
+        test_content = b"Hello from Render + Cloudflare R2!"
+        s3.put_object(Bucket=R2_BUCKET, Key="test.txt", Body=test_content)
+        return {"status": "success", "message": "File uploaded to R2 successfully"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
 
 @router.get("/download-test")
 def download_test():
     try:
-        s3.download_file(R2_BUCKET, "test.txt", "downloaded_test.txt")
-        with open("downloaded_test.txt", "r") as f:
-            content = f.read()
+        obj = s3.get_object(Bucket=R2_BUCKET, Key="test.txt")
+        content = obj["Body"].read().decode("utf-8")
         return {"status": "success", "content": content}
     except Exception as e:
         return {"status": "error", "message": str(e)}
