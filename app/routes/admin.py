@@ -16,6 +16,8 @@ R2_ACCESS_KEY_ID = "24bcd7f68391b74c3712d0919b6a0c66"
 R2_SECRET_ACCESS_KEY = "8eb34c1864c1e90ec42f67d0217aa2e3e7fac5225dd8b32e52b3575536ac6f4b"
 R2_BUCKET_NAME = "fastapi-pdf-app"
 
+R2_BUCKET = os.getenv("R2_BUCKET_NAME", "fastapi-pdf-app")  # đổi thành tên bucket của anh
+
 s3_client = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT_URL,
