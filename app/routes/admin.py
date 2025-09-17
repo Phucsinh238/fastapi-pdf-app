@@ -1,5 +1,5 @@
 
-import boto3, os
+
 from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
@@ -8,6 +8,7 @@ import openpyxl
 from sqlalchemy import text
 from app.database import engine
 from datetime import datetime
+import boto3
 
 
 from app.database import engine
