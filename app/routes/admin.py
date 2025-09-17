@@ -14,7 +14,7 @@ import boto3
 from app.database import engine
 
 router = APIRouter()
-
+templates = Jinja2Templates(directory="app/templates")
 # ==============================
 # 🔧 Config Cloudflare R2
 # ==============================
