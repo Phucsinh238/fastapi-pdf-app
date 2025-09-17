@@ -26,6 +26,15 @@ s3 = boto3.client(
     aws_secret_access_key=R2_SECRET_KEY,
 )
 
+# 📤 Form upload
+@router.get("/upload")
+def upload_form(request: Request):
+    role = request.session.get("role")
+    if role not in ["admin", "superadmin"]:
+        raise HTTPException(status_code=403, detail="Only admins can upload files.")
+    
+    return templates.TemplateResponse("upload.html", {"request": request})
+
 
 # 📤 Upload file lên R2
 @router.post("/upload")
