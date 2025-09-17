@@ -27,16 +27,28 @@
 <body class="container mt-4">
     <h2 class="mb-4">Viewing Document: {{ file.filename }}</h2>
 
-    {% if is_admin and full_pdf %}
-        <h3>Admin Access (Full PDF)</h3>
+    {% if is_admin or has_paid %}
+        <!-- ✅ Admin hoặc user đã mua -->
+        <h3 class="text-success">Full Access</h3>
         <div class="embed-container">
-            <embed src="{{ full_pdf }}" type="application/pdf">
+            <embed src="/download/{{ file.id }}" type="application/pdf">
         </div>
+
     {% elif preview_image %}
-        <h3>User Access (Preview Only)</h3>
+        <!-- 👤 User chưa mua: chỉ xem preview -->
+        <h3 class="text-warning">Preview Only</h3>
         <img src="{{ preview_image }}" alt="Preview Image" class="page-preview">
         <p>You are seeing only the first page preview.</p>
+
+        <!-- 🛒 Nút PayPal -->
+        <div class="text-center mt-4">
+            <a href="/pay/{{ file.id }}" class="btn btn-primary btn-lg">
+                💳 Buy Full PDF ($5.00)
+            </a>
+        </div>
+
     {% else %}
+        <!-- ❌ Không load được -->
         <p class="text-danger">Unable to load preview.</p>
     {% endif %}
 </body>
