@@ -13,7 +13,7 @@ from r2_router import router as r2_router
 app = FastAPI()
 
 # Gắn router R2
-app.include_router(r2_router)
+#app.include_router(r2_router)
 
 
 
