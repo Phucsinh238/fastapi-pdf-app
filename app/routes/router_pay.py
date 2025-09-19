@@ -38,24 +38,27 @@ def create_payment(file_id: int, request: Request):
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    price = float(document.get("price", 19.99))  # fallback nếu chưa có giá
+    base_url = str(request.base_url).rstrip("/")
+
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {"payment_method": "paypal"},
         "redirect_urls": {
-            "return_url": f"https://fastapi-pdf-app.onrender.com/payment/success?file_id={file_id}",
-            "cancel_url": "https://fastapi-pdf-app.onrender.com/payment/cancel"
+            "return_url": f"{base_url}/payment/success?file_id={file_id}",
+            "cancel_url": f"{base_url}/payment/cancel"
         },
         "transactions": [{
             "item_list": {
                 "items": [{
                     "name": document["filename"],
                     "sku": f"file-{file_id}",
-                    "price": "5.00",
+                    "price": f"{price:.2f}",
                     "currency": "USD",
                     "quantity": 1
                 }]
             },
-            "amount": {"total": "5.00", "currency": "USD"},
+            "amount": {"total": f"{price:.2f}", "currency": "USD"},
             "description": f"Access full document #{file_id}"
         }]
     })
@@ -84,8 +87,8 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        # Trả về HTML có JS auto download rồi redirect về trang chủ
-        previous_url = "https://fastapi-pdf-app.onrender.com"
+        base_url = str(request.base_url).rstrip("/")
+
         html_content = f"""
         <html>
             <head><meta charset="utf-8" /><title>Download</title></head>
@@ -93,12 +96,12 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
                 <p>Đang tải file <b>{document["filename"]}</b>...</p>
                 <script>
                     var a = document.createElement("a");
-                    a.href = "/download/{file_id}";
+                    a.href = "{base_url}/download/{file_id}";
                     a.download = "{document["filename"]}";
                     document.body.appendChild(a);
                     a.click();
                     setTimeout(function() {{
-                        window.location.href = "{previous_url}";
+                        window.location.href = "{base_url}";
                     }}, 2000);
                 </script>
             </body>
@@ -114,8 +117,8 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
 @router.get("/payment/cancel")
 def payment_cancel(request: Request):
     request.session["flash"] = "❌ Bạn đã hủy thanh toán."
-    referer = "https://fastapi-pdf-app.onrender.com"
-    return RedirectResponse(url=referer, status_code=303)
+    base_url = str(request.base_url).rstrip("/")
+    return RedirectResponse(url=base_url, status_code=303)
 
 
 # 📥 Download file từ R2 (chỉ cho người đã trả tiền)
@@ -131,7 +134,7 @@ def download_file(request: Request, file_id: int):
 
     file_obj = io.BytesIO()
     try:
-        s3.download_fileobj(R2_BUCKET, document["filename"], file_obj)
+        s3.download_fileobj(R2_BUCKET, document["r2_key"], file_obj)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
