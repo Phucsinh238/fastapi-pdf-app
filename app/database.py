@@ -31,13 +31,15 @@ def get_db():
 
 
 
-def get_document_by_id(doc_id: int):
-    with engine.connect() as conn:
+def get_document_by_id(file_id: int):
+    with engine.begin() as conn:
         result = conn.execute(
-            text("SELECT id, filename, filepath, upload_time FROM documents WHERE id = :id"),
-            {"id": doc_id}
+            text("""
+                SELECT id, filename, filepath, r2_key, uploaded_by, upload_time, price
+                FROM documents
+                WHERE id = :id
+            """),
+            {"id": file_id}
         )
         row = result.mappings().first()
-        if row:
-            return dict(row)  # chuyển RowMapping thành dict
-        return None
+        return dict(row) if row else None
