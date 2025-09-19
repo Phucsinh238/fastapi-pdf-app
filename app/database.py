@@ -15,7 +15,7 @@ from sqlalchemy import text
 import os
 
 # Lấy DATABASE_URL từ biến môi trường Render
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://documentpostgres_user:xpbIpp3sUXtc28jv64nmSVPDrdZgaoXW@dpg-d303nn3e5dus73emb86g-a:5432/documentpostgres")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_YCA1sk4JfnIF@ep-calm-king-a1bgsh11-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
 
 engine = create_engine(DATABASE_URL)
 
