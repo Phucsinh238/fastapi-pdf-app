@@ -42,7 +42,12 @@ def upload_form(request: Request):
 
 # 📤 Upload file (ghi vào Postgres + R2)
 @router.post("/upload")
-async def upload_file(request: Request, file: UploadFile, folder: str = Form("")):
+async def upload_file(
+    request: Request,
+    file: UploadFile = File(...),
+    folder: str = Form(""),
+    price: float = Form(19.99)   # mặc định 19.99 nếu không nhập
+):
     role = request.session.get("role")
     username = request.session.get("username")
 
@@ -62,23 +67,26 @@ async def upload_file(request: Request, file: UploadFile, folder: str = Form("")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload to R2 failed: {e}")
 
-    # Ghi log vào database Postgres (lưu cả r2_key)
+    # Ghi log vào database Postgres (lưu cả r2_key + price)
     with engine.begin() as conn:
         conn.execute(
             text("""
-                INSERT INTO documents (filename, filepath, r2_key, uploaded_by, upload_time)
-                VALUES (:filename, :filepath, :r2_key, :uploaded_by, :upload_time)
+                INSERT INTO documents (filename, filepath, r2_key, price, uploaded_by, upload_time)
+                VALUES (:filename, :filepath, :r2_key, :price, :uploaded_by, :upload_time)
             """),
             {
                 "filename": file.filename,
                 "filepath": object_key,   # không lưu local nữa, lưu luôn key
                 "r2_key": object_key,     # chuẩn để xoá sau này
+                "price": price,
                 "uploaded_by": username,
                 "upload_time": datetime.utcnow()
             }
         )
 
+    request.session["flash"] = f"✅ File '{file.filename}' uploaded with price ${price:.2f}"
     return RedirectResponse(url="/", status_code=302)
+
 
 
 # 🗑️ Xóa file theo ID (admin/superadmin)
