@@ -145,6 +145,6 @@ def download_file(request: Request, file_id: int):
     headers={
         "Content-Disposition": f'attachment; filename="{document["filename"]}"',
         "Content-Type": "application/octet-stream"
-    }
-)
+        }
+    )
 
