@@ -131,19 +131,20 @@ def download_file(request: Request, file_id: int):
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    file_obj = io.BytesIO()
     try:
-        file_obj = io.BytesIO()
+        # 🔑 Quan trọng: dùng r2_key để tải file từ R2
         s3.download_fileobj(R2_BUCKET, document["r2_key"], file_obj)
-        file_obj.seek(0)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"❌ Lỗi tải từ R2: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
-    # ép tải file về thay vì mở trong tab mới
+    file_obj.seek(0)
     return StreamingResponse(
         file_obj,
         media_type="application/octet-stream",
         headers={
             "Content-Disposition": f'attachment; filename="{document["filename"]}"',
-            "Cache-Control": "no-cache"
+            "Content-Type": "application/pdf"
         }
     )
+
