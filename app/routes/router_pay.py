@@ -137,8 +137,7 @@ def payment_cancel(request: Request):
 
 
 # 📥 Download file từ R2 (chỉ cho người đã trả tiền)
-from fastapi.responses import FileResponse
-
+# 📥 Download file từ R2 (chỉ cho người đã trả tiền)
 @router.get("/download/{file_id}")
 def download_file(request: Request, file_id: int):
     paid_files = request.session.get("paid_files", [])
@@ -157,12 +156,14 @@ def download_file(request: Request, file_id: int):
 
     file_obj.seek(0)
 
+    # ⚡ Fix bug: ép trình duyệt tải file
     return StreamingResponse(
         file_obj,
-        media_type="application/octet-stream",
+        media_type="application/octet-stream",   # ép tải xuống thay vì mở PDF
         headers={
             "Content-Disposition": f'attachment; filename="{document["filename"]}"'
         }
     )
+
 
 
