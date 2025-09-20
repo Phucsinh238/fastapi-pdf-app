@@ -72,6 +72,7 @@ def create_payment(file_id: int, request: Request):
         raise HTTPException(status_code=500, detail="Payment creation failed.")
 
 
+
 # ✅ Thanh toán thành công
 @router.get("/payment/success")
 def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int):
@@ -91,25 +92,40 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
 
         html_content = f"""
         <html>
-            <head><meta charset="utf-8" /><title>Download</title></head>
-            <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-                <h3>✅ Thanh toán thành công!</h3>
+            <head>
+                <meta charset="utf-8" />
+                <title>Thanh toán thành công</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; background: #111; color: #eee; text-align: center; padding: 50px; }}
+                    .btn-download {{
+                        background: #28a745;
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        font-size: 16px;
+                        font-weight: bold;
+                    }}
+                    .btn-download:hover {{ background: #218838; }}
+                </style>
+            </head>
+            <body>
+                <h2>✅ Thanh toán thành công!</h2>
                 <p>Bạn có thể tải xuống file <b>{document["filename"]}</b> bằng nút bên dưới:</p>
-                <a href="{base_url}/download/{file_id}" class="btn btn-success" style="padding:10px 20px;
-                   background-color:green;color:white;text-decoration:none;border-radius:5px;">
-                   ⬇ Download file
-                </a>
+                <a href="{base_url}/download/{file_id}" 
+                   download="{document["filename"]}" 
+                   class="btn-download">↓ Download file</a>
                 <p style="margin-top:20px;">
                     Sau khi tải xong, bạn có thể <a href="{base_url}">quay lại trang chính</a>.
                 </p>
             </body>
         </html>
         """
-
         return HTMLResponse(content=html_content)
 
     else:
         raise HTTPException(status_code=400, detail="Payment failed.")
+
 
 
 # ❌ Thanh toán bị hủy
