@@ -139,12 +139,12 @@ def download_file(request: Request, file_id: int):
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
     file_obj.seek(0)
-   return StreamingResponse(
-    file_obj,
-    media_type="application/pdf",
-    headers={
-        "Content-Disposition": f'attachment; filename="{document["filename"]}"',
-        "Content-Type": "application/octet-stream"
-        }
-    )
+    return StreamingResponse(
+        file_obj,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{document["filename"]}"',
+            "Content-Type": "application/octet-stream"
+            }
+        )
 
