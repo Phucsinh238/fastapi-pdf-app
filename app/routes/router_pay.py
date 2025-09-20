@@ -121,6 +121,8 @@ def payment_cancel(request: Request):
 
 
 # 📥 Download file từ R2 (chỉ cho người đã trả tiền)
+from fastapi.responses import FileResponse
+
 @router.get("/download/{file_id}")
 def download_file(request: Request, file_id: int):
     paid_files = request.session.get("paid_files", [])
@@ -133,18 +135,18 @@ def download_file(request: Request, file_id: int):
 
     file_obj = io.BytesIO()
     try:
-        # 🔑 Quan trọng: dùng r2_key để tải file từ R2
         s3.download_fileobj(R2_BUCKET, document["r2_key"], file_obj)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
     file_obj.seek(0)
+
     return StreamingResponse(
         file_obj,
-        media_type="application/pdf",
+        media_type="application/octet-stream",
         headers={
-            "Content-Disposition": f'attachment; filename="{document["filename"]}"',
-            "Content-Type": "application/octet-stream"
-            }
-        )
+            "Content-Disposition": f'attachment; filename="{document["filename"]}"'
+        }
+    )
+
 
