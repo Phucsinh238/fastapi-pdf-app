@@ -92,21 +92,20 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
         html_content = f"""
         <html>
             <head><meta charset="utf-8" /><title>Download</title></head>
-            <body>
-                <p>Đang tải file <b>{document["filename"]}</b>...</p>
-                <script>
-                    var a = document.createElement("a");
-                    a.href = "{base_url}/download/{file_id}";
-                    a.download = "{document["filename"]}";
-                    document.body.appendChild(a);
-                    a.click();
-                    setTimeout(function() {{
-                        window.location.href = "{base_url}";
-                    }}, 2000);
-                </script>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+                <h3>✅ Thanh toán thành công!</h3>
+                <p>Bạn có thể tải xuống file <b>{document["filename"]}</b> bằng nút bên dưới:</p>
+                <a href="{base_url}/download/{file_id}" class="btn btn-success" style="padding:10px 20px;
+                   background-color:green;color:white;text-decoration:none;border-radius:5px;">
+                   ⬇ Download file
+                </a>
+                <p style="margin-top:20px;">
+                    Sau khi tải xong, bạn có thể <a href="{base_url}">quay lại trang chính</a>.
+                </p>
             </body>
         </html>
         """
+
         return HTMLResponse(content=html_content)
 
     else:
