@@ -1,18 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h4>Preview First Page</h4>
 
-{% if file.endswith(".pdf") %}
-<embed src="{{ file }}#page=1" width="100%" height="600px" type="application/pdf" />
-{% elif file.endswith(".docx") %}
-<p><i>Word preview not supported in browser – use backend parsing</i></p>
-{% elif file.endswith(".xlsx") %}
-<p><i>Excel preview not supported in browser – use backend parsing</i></p>
-{% elif file.endswith(".pptx") %}
-<p><i>PowerPoint preview not supported in browser – use backend parsing</i></p>
+{% if file.filename.endswith(".pdf") %}
+    {% if preview_image %}
+        <!-- Hiển thị ảnh preview trang 1 -->
+        <img src="{{ preview_image }}" alt="Preview Image" class="img-fluid border" style="max-height:600px;">
+        <p class="mt-2 text-muted">You are seeing only the first page preview.</p>
+
+        <!-- Nút mua full PDF với giá động từ DB -->
+        <div class="mt-3">
+            <a href="/pay/{{ file.id }}" class="btn btn-warning">
+                🛒 Buy Full PDF (${{ '%.2f'|format(file.price) }})
+            </a>
+        </div>
+    {% else %}
+        <p class="text-danger">Preview not available for this file.</p>
+    {% endif %}
+
+{% elif file.filename.endswith(".docx") %}
+    <p><i>Word preview not supported – you can purchase to download full file.</i></p>
+    <a href="/pay/{{ file.id }}" class="btn btn-warning">
+        🛒 Buy Full Word File (${{ '%.2f'|format(file.price) }})
+    </a>
+
+{% elif file.filename.endswith(".xlsx") %}
+    <p><i>Excel preview not supported – you can purchase to download full file.</i></p>
+    <a href="/pay/{{ file.id }}" class="btn btn-warning">
+        🛒 Buy Full Excel File (${{ '%.2f'|format(file.price) }})
+    </a>
+
+{% elif file.filename.endswith(".pptx") %}
+    <p><i>PowerPoint preview not supported – you can purchase to download full file.</i></p>
+    <a href="/pay/{{ file.id }}" class="btn btn-warning">
+        🛒 Buy Full PowerPoint File (${{ '%.2f'|format(file.price) }})
+    </a>
+
 {% else %}
-<p>File not supported</p>
+    <p><i>File format not supported for preview.</i></p>
 {% endif %}
 
-<a href="/" class="btn btn-secondary mt-3">Back</a>
+<!-- Nút quay lại -->
+<a href="/" class="btn btn-secondary mt-4">← Back to Home</a>
+
 {% endblock %}
