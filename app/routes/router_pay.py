@@ -97,8 +97,9 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
                 <meta charset="utf-8" />
                 <title>Download</title>
                 <style>
-                    body {{ font-family: sans-serif; margin: 40px; }}
+                    body {{ font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }}
                     .box {{
+                        background: #fff;
                         border: 1px solid #ddd;
                         border-radius: 8px;
                         padding: 20px;
@@ -109,36 +110,40 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
                     }}
                     a.button {{
                         display: inline-block;
+                        margin-top: 15px;
                         padding: 10px 20px;
-                        margin: 10px;
+                        background: #0070f3;
+                        color: white;
                         border-radius: 6px;
                         text-decoration: none;
-                        font-weight: bold;
-                        color: white;
-                        background: #28a745;
                     }}
-                    a.home {{
-                        background: #007bff;
-                    }}
+                    a.button:hover {{ background: #0059c9; }}
                 </style>
             </head>
             <body>
                 <div class="box">
-                    <h2>✅ Thanh toán thành công!</h2>
-                    <p>Bạn có thể tải file <b>{document["filename"]}</b> theo các cách sau:</p>
-                    
-                    <p>👉 Hệ thống đang thử tự động tải file...</p>
-                    <a id="dl" class="button" href="{download_url}" download="{document["filename"]}">
-                        ⬇️ Tải xuống ngay
-                    </a>
-                    <p><small>Nếu không tải được, hãy <b>click chuột phải</b> vào nút trên và chọn <i>Save link as...</i></small></p>
+                    <h2>✅ Payment Successful!</h2>
+                    <p>Your file <b>{document["filename"]}</b> is ready.</p>
 
-                    <a href="{base_url}" class="button home">🏠 Về trang chủ</a>
+                    <p><strong>We are starting your download automatically...</strong></p>
+                    <p>If it does not start, click the button below or right-click and choose <i>“Save link as...”</i>.</p>
+
+                    <a class="button" href="{download_url}" download="{document["filename"]}">⬇️ Download File</a>
+
+                    <p style="margin-top:20px;">
+                        <a href="{base_url}">⬅️ Back to Home</a>
+                    </p>
                 </div>
 
                 <script>
-                    // Thử auto download
-                    document.getElementById("dl").click();
+                    // Try to auto-download after 1 second
+                    setTimeout(function() {{
+                        var a = document.createElement("a");
+                        a.href = "{download_url}";
+                        a.download = "{document["filename"]}";
+                        document.body.appendChild(a);
+                        a.click();
+                    }}, 1000);
                 </script>
             </body>
         </html>
