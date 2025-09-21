@@ -89,20 +89,56 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
             raise HTTPException(status_code=404, detail="Document not found")
 
         base_url = str(request.base_url).rstrip("/")
+        download_url = f"{base_url}/download/{file_id}"
 
         html_content = f"""
         <html>
-            <head><meta charset="utf-8" /><title>Download</title></head>
+            <head>
+                <meta charset="utf-8" />
+                <title>Download</title>
+                <style>
+                    body {{ font-family: sans-serif; margin: 40px; }}
+                    .box {{
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        padding: 20px;
+                        max-width: 600px;
+                        margin: auto;
+                        text-align: center;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }}
+                    a.button {{
+                        display: inline-block;
+                        padding: 10px 20px;
+                        margin: 10px;
+                        border-radius: 6px;
+                        text-decoration: none;
+                        font-weight: bold;
+                        color: white;
+                        background: #28a745;
+                    }}
+                    a.home {{
+                        background: #007bff;
+                    }}
+                </style>
+            </head>
             <body>
-                <p>✅ Thanh toán thành công! Đang tải file <b>{document["filename"]}</b>...</p>
-                <a id="dl" href="{base_url}/download/{file_id}" download="{document["filename"]}" style="display:none;"></a>
+                <div class="box">
+                    <h2>✅ Thanh toán thành công!</h2>
+                    <p>Bạn có thể tải file <b>{document["filename"]}</b> theo các cách sau:</p>
+                    
+                    <p>👉 Hệ thống đang thử tự động tải file...</p>
+                    <a id="dl" class="button" href="{download_url}" download="{document["filename"]}">
+                        ⬇️ Tải xuống ngay
+                    </a>
+                    <p><small>Nếu không tải được, hãy <b>click chuột phải</b> vào nút trên và chọn <i>Save link as...</i></small></p>
+
+                    <a href="{base_url}" class="button home">🏠 Về trang chủ</a>
+                </div>
+
                 <script>
-                    // Click tự động để tải file
+                    // Thử auto download
                     document.getElementById("dl").click();
-                    // Redirect về trang chủ sau 3s
-                    setTimeout(function() {{
-                        window.location.href = "{base_url}";
-                    }}, 3000);
                 </script>
             </body>
         </html>
