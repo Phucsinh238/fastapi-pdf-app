@@ -90,7 +90,7 @@ def view_file(
             convert_pdf_first_page(tmp_path, output_image_path)
 
             image_url = f"/static/previews/{file_id}.png"
-            price = float(document.get("price") or 19.99)
+            price = float(document.get("price"))
             return templates.TemplateResponse("file_viewer.html", {
                 "request": request,
                 "file": document,
