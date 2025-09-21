@@ -7,6 +7,8 @@ from app.database import engine  # đã config PostgreSQL trong database.py
 from app.routes.auth import get_current_user
 from ..utils import convert_pdf_first_page
 from decimal import Decimal
+from app.database import get_document_by_id
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -135,10 +137,10 @@ def list_r2_files():
 
 
 # 🔎 Hàm lấy document theo ID (Postgres)
-def get_document_by_id(doc_id: int):
-    with engine.connect() as conn:
-        row = conn.execute(
-            text("SELECT id, filename, filepath, upload_time FROM documents WHERE id = :id"),
-            {"id": doc_id}
-        ).mappings().first()
-    return dict(row) if row else None
+#def get_document_by_id(doc_id: int):
+#    with engine.connect() as conn:
+#        row = conn.execute(
+#            text("SELECT id, filename, filepath, upload_time FROM documents WHERE id = :id"),
+#            {"id": doc_id}
+#        ).mappings().first()
+#    return dict(row) if row else None
