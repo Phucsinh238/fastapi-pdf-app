@@ -42,9 +42,9 @@
 
         <!-- 🛒 Nút PayPal -->
         <div class="text-center mt-4">
-            <a href="/pay/{{ file.id }}" class="btn btn-primary btn-lg">
-                💳 Buy Full PDF ($5.00)
-            </a>
+             <a href="/pay/{{ file.id }}" class="btn btn-primary btn-lg">
+                💳 Buy Full PDF (${{ '%.2f'|format(file.price) }})
+             </a>
         </div>
 
     {% else %}
