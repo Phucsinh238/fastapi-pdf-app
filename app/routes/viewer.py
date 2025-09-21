@@ -95,7 +95,8 @@ def view_file(
                 "request": request,
                 "file": document,
                 "preview_image": image_url,
-                "is_admin": False
+                "is_admin": False,
+                "price": document.get("price", 19.99)
             })
 
 
