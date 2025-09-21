@@ -51,26 +51,33 @@ def confirm_token(token: str, expiration: int = 3600) -> str | None:
         return None
     return email
 
+import os
+import fitz  # PyMuPDF
 
 def convert_pdf_first_page(file_path: str, output_path: str):
     print(f"file_path and output_path: {file_path} {output_path}")
     try:
-        poppler_path = "/usr/bin"
+        # tạo folder nếu chưa có
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        images = convert_from_path(
-            file_path,
-            dpi=200,
-            first_page=1,
-            last_page=1,
-            poppler_path=poppler_path
-        )
-        if images:
-            images[0].save(output_path, "PNG")
-            return output_path  # -> static/previews/<file_id>.png
-        else:
+        # mở file PDF
+        doc = fitz.open(file_path)
+        if len(doc) == 0:
+            print("[X] PDF is empty")
             return None
+
+        # lấy trang đầu tiên
+        page = doc[0]
+
+        # render trang thành hình ảnh (PNG)
+        pix = page.get_pixmap(dpi=200)  # bạn có thể chỉnh dpi = 150 để nhẹ hơn
+        pix.save(output_path)
+
+        print(f"[✓] Saved preview at {output_path}")
+        return output_path
+
     except Exception as e:
         print(f"[X] Error converting PDF: {e}")
         return None
+
 
