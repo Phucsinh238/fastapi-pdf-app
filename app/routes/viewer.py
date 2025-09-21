@@ -6,7 +6,7 @@ from sqlalchemy import text
 from app.database import engine  # đã config PostgreSQL trong database.py
 from app.routes.auth import get_current_user
 from ..utils import convert_pdf_first_page
-
+from decimal import Decimal
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -90,7 +90,12 @@ def view_file(
             convert_pdf_first_page(tmp_path, output_image_path)
 
             image_url = f"/static/previews/{file_id}.png"
-            price = float(document.get("price"))
+            raw_price = document.get("price")
+
+            if raw_price is None:
+                price = Decimal("19.99")  # fallback mặc định
+            else:
+                price = Decimal(raw_price)  # giữ chuẩn tiền tệ
             return templates.TemplateResponse("file_viewer.html", {
                 "request": request,
                 "file": document,
