@@ -74,6 +74,7 @@ def create_payment(file_id: int, request: Request):
 
 
 # ✅ Thanh toán thành công
+# ✅ Thanh toán thành công
 @router.get("/payment/success")
 def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int):
     payment = paypalrestsdk.Payment.find(paymentId)
@@ -90,34 +91,15 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
 
         base_url = str(request.base_url).rstrip("/")
 
+        # Auto tải file sau khi thanh toán thành công
         html_content = f"""
         <html>
-            <head>
-                <meta charset="utf-8" />
-                <title>Thanh toán thành công</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; background: #111; color: #eee; text-align: center; padding: 50px; }}
-                    .btn-download {{
-                        background: #28a745;
-                        color: white;
-                        padding: 12px 24px;
-                        border-radius: 6px;
-                        text-decoration: none;
-                        font-size: 16px;
-                        font-weight: bold;
-                    }}
-                    .btn-download:hover {{ background: #218838; }}
-                </style>
-            </head>
+            <head><meta charset="utf-8" /><title>Download</title></head>
             <body>
-                <h2>✅ Thanh toán thành công!</h2>
-                <p>Bạn có thể tải xuống file <b>{document["filename"]}</b> bằng nút bên dưới:</p>
-                <a href="{base_url}/download/{file_id}" 
-                   download="{document["filename"]}" 
-                   class="btn-download">↓ Download file</a>
-                <p style="margin-top:20px;">
-                    Sau khi tải xong, bạn có thể <a href="{base_url}">quay lại trang chính</a>.
-                </p>
+                <p>✅ Thanh toán thành công! Đang tải file <b>{document["filename"]}</b>...</p>
+                <script>
+                    window.location.href = "{base_url}/download/{file_id}";
+                </script>
             </body>
         </html>
         """
@@ -125,6 +107,7 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
 
     else:
         raise HTTPException(status_code=400, detail="Payment failed.")
+
 
 
 
@@ -155,14 +138,11 @@ def download_file(request: Request, file_id: int):
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
     file_obj.seek(0)
-
-    # ⚡ Fix bug: ép trình duyệt tải file
+    # Ép buộc tải file xuống (mọi trình duyệt)
     return StreamingResponse(
         file_obj,
-        media_type="application/octet-stream",   # ép tải xuống thay vì mở PDF
-        headers={
-            "Content-Disposition": f'attachment; filename="{document["filename"]}"'
-        }
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{document["filename"]}"'}
     )
 
 
