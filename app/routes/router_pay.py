@@ -74,7 +74,6 @@ def create_payment(file_id: int, request: Request):
 
 
 # ✅ Thanh toán thành công
-# ✅ Thanh toán thành công
 @router.get("/payment/success")
 def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int):
     payment = paypalrestsdk.Payment.find(paymentId)
@@ -91,14 +90,19 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
 
         base_url = str(request.base_url).rstrip("/")
 
-        # Auto tải file sau khi thanh toán thành công
         html_content = f"""
         <html>
             <head><meta charset="utf-8" /><title>Download</title></head>
             <body>
                 <p>✅ Thanh toán thành công! Đang tải file <b>{document["filename"]}</b>...</p>
+                <a id="dl" href="{base_url}/download/{file_id}" download="{document["filename"]}" style="display:none;"></a>
                 <script>
-                    window.location.href = "{base_url}/download/{file_id}";
+                    // Click tự động để tải file
+                    document.getElementById("dl").click();
+                    // Redirect về trang chủ sau 3s
+                    setTimeout(function() {{
+                        window.location.href = "{base_url}";
+                    }}, 3000);
                 </script>
             </body>
         </html>
