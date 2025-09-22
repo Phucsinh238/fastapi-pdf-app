@@ -7,6 +7,7 @@
 </head>
 <body class="container py-4">
 
+  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>📄 Document Viewer</h2>
     <div>
@@ -19,65 +20,120 @@
     </div>
   </div>
 
- <div class="container mt-3">
-        <div class="d-flex justify-content-end">
-            {% if request.state.current_user %}
-                👤 Logged in as <b>{{ request.state.current_user.username }}</b>
-                (role: {{ request.state.current_user.role }})
-            {% else %}
-                🚪 Not logged in
-            {% endif %}
+  <div class="container mt-3">
+    <div class="d-flex justify-content-end">
+      {% if request.state.current_user %}
+          👤 Logged in as <b>{{ request.state.current_user.username }}</b>
+          (role: {{ request.state.current_user.role }})
+      {% else %}
+          🚪 Not logged in
+      {% endif %}
+    </div>
+    <hr>
+  </div>
+
+  <!-- Hero Section: Bản tin nổi bật -->
+  {% if news_main %}
+  <div class="row mb-5">
+    <div class="col-md-8">
+      <img src="{{ news_main.image_url }}" alt="News Image" class="img-fluid rounded shadow">
+    </div>
+    <div class="col-md-4 d-flex flex-column justify-content-center">
+      <h2 class="fw-bold">{{ news_main.title }}</h2>
+      <p>{{ news_main.summary }}</p>
+      <a href="/news/{{ news_main.id }}" class="btn btn-primary">Đọc tiếp</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row">
+    <!-- Content main -->
+    <div class="col-md-9">
+      
+      <!-- Danh sách tin tức khác -->
+      <h3 class="mb-3">Tin tức khác</h3>
+      <div class="row mb-5">
+        {% for news in news_list %}
+        <div class="col-md-4 mb-3">
+          <div class="card h-100 shadow-sm">
+            <img src="{{ news.image_url }}" class="card-img-top" alt="...">
+            <div class="card-body">
+              <h6 class="card-title">{{ news.title }}</h6>
+              <p class="text-muted small">{{ news.summary }}</p>
+              <a href="/news/{{ news.id }}" class="btn btn-sm btn-outline-primary">Xem thêm</a>
+            </div>
+          </div>
         </div>
-        <hr>
-        {% block content %}{% endblock %}
-    </div>
-  
-  {% if request.session.get("role") in ["admin", "superadmin"] %}
-    <div class="mb-3">
-      <a href="/upload" class="btn btn-success">➕ Upload New Document</a>
-    </div>
-  {% endif %}
+        {% endfor %}
+      </div>
 
+      <!-- Danh sách tài liệu -->
+      <h3 class="mb-3">Danh sách tài liệu</h3>
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Filename</th>
+            <th scope="col">Uploaded By</th>
+            <th scope="col">Uploaded At</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in documents %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ doc.filename }}</td>
+            <td>{{ doc.uploaded_by or 'Unknown' }}</td>
+            <td>{{ doc.upload_time }}</td>
+            <td>
+              <a href="/view/{{ doc.id }}" class="btn btn-primary btn-sm">View</a>
+              {% if request.session.get("role") in ["admin", "superadmin"] %}
+                <a href="/delete/{{ doc.id }}" class="btn btn-danger btn-sm"
+                  onclick="return confirm('Are you sure you want to delete this document?')">Delete</a>
+              {% else %}
+                <a href="/pay/{{ doc.id }}" class="btn btn-outline-warning btn-sm">Request full document</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sidebar quảng cáo -->
+    <div class="col-md-3">
+      <h5 class="mb-3">Quảng cáo</h5>
+      <div class="mb-4">
+        <a href="https://sponsor1.com" target="_blank">
+          <img src="/static/images/banner-ads1.jpg" class="img-fluid rounded shadow" alt="Quảng cáo 1">
+        </a>
+      </div>
+      <div class="mb-4">
+        <a href="https://sponsor2.com" target="_blank">
+          <img src="/static/images/banner-ads2.jpg" class="img-fluid rounded shadow" alt="Quảng cáo 2">
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash message -->
   {% if flash %}
-    <div class="alert alert-info" role="alert">
-    {{ flash }}
+    <div class="alert alert-info mt-3" role="alert">
+      {{ flash }}
     </div>
   {% endif %}
 
-  <table class="table table-bordered">
-    <thead class="table-light">
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">Filename</th>
-        <th scope="col">Uploaded By</th>
-        <th scope="col">Uploaded At</th>
-        <th scope="col">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for doc in documents %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ doc.filename }}</td>
-        <td>{{ doc.uploaded_by or 'Unknown' }}</td>
-        <td>{{ doc.upload_time }}</td>
-        <td>
-          <a href="/view/{{ doc.id }}" class="btn btn-primary btn-sm">View</a>
+  <!-- Back + Home -->
+  <div class="container mt-3">
+    <button class="btn btn-outline-secondary mb-3" onclick="history.back()">⬅ Back</button>
+    <a href="/" class="btn btn-outline-primary mb-3">🏠 Home</a>
+  </div>
 
-          {% if request.session.get("role") in ["admin", "superadmin"] %}
-            <a href="/delete/{{ doc.id }}" class="btn btn-danger btn-sm"
-              onclick="return confirm('Are you sure you want to delete this document?')">Delete</a>
-          {% else %}
-            <a href="/pay/{{ doc.id }}" class="btn btn-outline-warning btn-sm">Request full document</a>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-<div class="container mt-3">
-        <button class="btn btn-outline-secondary mb-3" onclick="history.back()">⬅ Back</button>
-        <a href="/" class="btn btn-outline-primary mb-3">🏠 Home</a>
-    </div>
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3 mt-5">
+    <p>&copy; {{ current_year }} My PDF Store | <a href="/about" class="text-white">Giới thiệu</a> | <a href="/policy" class="text-white">Chính sách</a></p>
+  </footer>
+
 </body>
 </html>
