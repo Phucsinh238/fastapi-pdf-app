@@ -69,6 +69,7 @@
 
       <!-- Danh sách tài liệu -->
 <!-- Danh sách tài liệu -->
+<!-- Danh sách tài liệu -->
 <h3 class="mb-3">Danh sách tài liệu</h3>
 <div class="row">
   {% for doc in documents %}
@@ -80,22 +81,13 @@
           📤 {{ doc.uploaded_by or 'Unknown' }} <br>
           ⏰ {{ doc.upload_time }}
         </p>
-
-        {% if request.session.get("role") not in ["admin", "superadmin"] %}
-          <p class="fw-bold text-success">
-            💲 {{ "%.2f"|format(doc.price or 19.99) }} USD
-          </p>
-        {% endif %}
-
         <div class="mt-auto">
           <a href="/view/{{ doc.id }}" class="btn btn-primary btn-sm w-100 mb-2">👁 View</a>
           {% if request.session.get("role") in ["admin", "superadmin"] %}
             <a href="/delete/{{ doc.id }}" class="btn btn-danger btn-sm w-100"
               onclick="return confirm('Are you sure you want to delete this document?')">🗑 Delete</a>
           {% else %}
-            <a href="/pay/{{ doc.id }}" class="btn btn-outline-warning btn-sm w-100">
-              💳 Buy full document
-            </a>
+            <a href="/pay/{{ doc.id }}" class="btn btn-outline-warning btn-sm w-100">💳 Buy full document</a>
           {% endif %}
         </div>
       </div>
@@ -103,6 +95,7 @@
   </div>
   {% endfor %}
 </div>
+
 
     </div>
 
