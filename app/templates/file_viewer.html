@@ -51,5 +51,9 @@
         <!-- ❌ Không load được -->
         <p class="text-danger">Unable to load preview.</p>
     {% endif %}
+    <div class="container mt-3">
+        <button class="btn btn-outline-secondary mb-3" onclick="history.back()">⬅ Back</button>
+        {% block content %}{% endblock %}
+    </div>
 </body>
 </html>
