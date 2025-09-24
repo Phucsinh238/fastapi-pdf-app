@@ -41,7 +41,7 @@ def home(request: Request, page: int = Query(1, ge=1)):
 
         result = conn.execute(
             text("""
-                SELECT id, filename, filepath, upload_time
+                SELECT id, filename, filepath, upload_time, price
                 FROM documents
                 ORDER BY upload_time DESC
                 LIMIT :limit OFFSET :offset
