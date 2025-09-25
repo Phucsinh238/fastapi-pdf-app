@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from app.db import engine
+from app.database import engine  # đã config PostgreSQL trong database.py
 
 def get_news(limit: int = 10):
     """Lấy danh sách tin mới nhất"""
