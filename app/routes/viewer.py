@@ -8,6 +8,7 @@ from app.routes.auth import get_current_user
 from ..utils import convert_pdf_first_page
 from decimal import Decimal
 from app.database import get_document_by_id
+from app.services.news_service import get_news
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -50,11 +51,18 @@ def home(request: Request, page: int = Query(1, ge=1)):
         )
         documents = result.mappings().all()
 
+    news = get_news(limit=7)
+    news_main = news[0] if news else None
+    news_list = news[1:] if len(news) > 1 else []
+
+    
     return templates.TemplateResponse("index.html", {
         "request": request,
         "documents": documents,
         "page": page,
-        "total_pages": total_pages
+        "total_pages": total_pages,
+        "news_main": news_main,
+        "news_list": news_list
     })
 
 
