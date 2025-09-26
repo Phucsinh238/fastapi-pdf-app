@@ -15,6 +15,10 @@
 # app/models.py
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
 from .database import Base
+from sqlalchemy import Text
+from datetime import datetime
+from app.database import Base
+
 
 # Bảng users
 class User(Base):
@@ -58,3 +62,17 @@ class AccessLog(Base):
     user = Column(String)
     file = Column(String)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+
+
+
+class News(Base):
+    __tablename__ = "news"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(Text, nullable=False)
+    summary = Column(Text)
+    content = Column(Text)
+    image_url = Column(String)
+    created_at = Column(DateTime, default=datetime.now)
+
