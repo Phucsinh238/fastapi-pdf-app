@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sửa tin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+
+  <h2>✏ Sửa bản tin</h2>
+  <form action="/admin/news/edit/{{ news.id }}" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">Tiêu đề</label>
+      <input type="text" name="title" class="form-control" value="{{ news.title }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Tóm tắt</label>
+      <textarea name="summary" class="form-control" rows="2" required>{{ news.summary }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Nội dung</label>
+      <textarea name="content" class="form-control" rows="8" required>{{ news.content }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Ảnh minh họa (tùy chọn)</label>
+      <input type="file" name="image" class="form-control">
+      {% if news.image_url %}
+        <div class="mt-2">
+          <img src="{{ news.image_url }}" class="img-fluid rounded shadow" style="max-width: 200px;">
+        </div>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">💾 Lưu</button>
+    <a href="/admin/news" class="btn btn-secondary">⬅ Quay lại</a>
+  </form>
+
+</body>
+</html>
