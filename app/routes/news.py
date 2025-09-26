@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from app.services.news_service import get_news, get_news_detail
-from app.templates import templates
+from fastapi.templating import Jinja2Templates
 
 from fastapi import Depends, Form, UploadFile, File
 from fastapi.responses import RedirectResponse
@@ -13,7 +13,7 @@ from app.database import get_db
 from app.models import News
 
 router = APIRouter()
-
+templates = Jinja2Templates(directory="app/templates")
 UPLOAD_DIR = "static/agri/news/"
 
 @router.get("/admin/news/new")
