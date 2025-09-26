@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
 import shutil, os
-
+from math import ceil
 from app.database import get_db
 from app.models import News
 
@@ -72,16 +72,37 @@ def news_detail(request: Request, news_id: int):
     })
 
 
+
+
 @router.get("/admin/news")
-def admin_news_list(request: Request, db: Session = Depends(get_db)):
+def admin_news_list(
+    request: Request,
+    page: int = 1,
+    per_page: int = 10,
+    db: Session = Depends(get_db)
+):
     if request.session.get("role") not in ["admin", "superadmin"]:
         return RedirectResponse("/", status_code=303)
 
-    news_list = db.query(News).order_by(News.created_at.desc()).all()
+    total = db.query(News).count()
+    pages = ceil(total / per_page)
+
+    news_list = (
+        db.query(News)
+        .order_by(News.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
     return templates.TemplateResponse("news_admin_list.html", {
         "request": request,
-        "news_list": news_list
+        "news_list": news_list,
+        "page": page,
+        "pages": pages,
+        "total": total
     })
+
 
 
 @router.get("/admin/news/edit/{news_id}")
