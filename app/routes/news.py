@@ -70,3 +70,73 @@ def news_detail(request: Request, news_id: int):
         "request": request,
         "news": news_item
     })
+
+
+@router.get("/admin/news")
+def admin_news_list(request: Request, db: Session = Depends(get_db)):
+    if request.session.get("role") not in ["admin", "superadmin"]:
+        return RedirectResponse("/", status_code=303)
+
+    news_list = db.query(News).order_by(News.created_at.desc()).all()
+    return templates.TemplateResponse("news_admin_list.html", {
+        "request": request,
+        "news_list": news_list
+    })
+
+
+@router.get("/admin/news/edit/{news_id}")
+def edit_news_form(news_id: int, request: Request, db: Session = Depends(get_db)):
+    if request.session.get("role") not in ["admin", "superadmin"]:
+        return RedirectResponse("/", status_code=303)
+
+    news = db.query(News).filter(News.id == news_id).first()
+    if not news:
+        return RedirectResponse("/admin/news", status_code=303)
+
+    return templates.TemplateResponse("news_edit.html", {"request": request, "news": news})
+
+
+@router.post("/admin/news/edit/{news_id}")
+def update_news(
+    news_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    title: str = Form(...),
+    summary: str = Form(...),
+    content: str = Form(...),
+    image: UploadFile = File(None)
+):
+    if request.session.get("role") not in ["admin", "superadmin"]:
+        return RedirectResponse("/", status_code=303)
+
+    news = db.query(News).filter(News.id == news_id).first()
+    if not news:
+        return RedirectResponse("/admin/news", status_code=303)
+
+    news.title = title
+    news.summary = summary
+    news.content = content
+
+    # Nếu có upload ảnh mới thì thay
+    if image and image.filename:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        file_path = os.path.join(UPLOAD_DIR, image.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+        news.image_url = "/" + file_path
+
+    db.commit()
+    return RedirectResponse("/admin/news", status_code=303)
+
+
+@router.get("/admin/news/delete/{news_id}")
+def delete_news(news_id: int, request: Request, db: Session = Depends(get_db)):
+    if request.session.get("role") not in ["admin", "superadmin"]:
+        return RedirectResponse("/", status_code=303)
+
+    news = db.query(News).filter(News.id == news_id).first()
+    if news:
+        db.delete(news)
+        db.commit()
+
+    return RedirectResponse("/admin/news", status_code=303)
