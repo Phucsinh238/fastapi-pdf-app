@@ -9,11 +9,14 @@ from fastapi import Request
 from app.database import Base, engine
 from app.models import User, Document, LoginLog, AccessLog
 from r2_router import router as r2_router
-
+from app.routes import news
 app = FastAPI()
 
 # Gắn router R2
 #app.include_router(r2_router)
+
+
+
 
 
 
@@ -67,7 +70,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(router_pay.router)
 
-
+app.include_router(news.router)
 
 
 
