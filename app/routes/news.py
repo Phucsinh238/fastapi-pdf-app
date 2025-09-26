@@ -73,23 +73,27 @@ def news_detail(request: Request, news_id: int):
 
 
 
-
 @router.get("/admin/news")
 def admin_news_list(
     request: Request,
     page: int = 1,
     per_page: int = 10,
+    search: str = "",
     db: Session = Depends(get_db)
 ):
     if request.session.get("role") not in ["admin", "superadmin"]:
         return RedirectResponse("/", status_code=303)
 
-    total = db.query(News).count()
+    query = db.query(News)
+
+    if search:
+        query = query.filter(News.title.ilike(f"%{search}%"))
+
+    total = query.count()
     pages = ceil(total / per_page)
 
     news_list = (
-        db.query(News)
-        .order_by(News.created_at.desc())
+        query.order_by(News.created_at.desc())
         .offset((page - 1) * per_page)
         .limit(per_page)
         .all()
@@ -100,7 +104,8 @@ def admin_news_list(
         "news_list": news_list,
         "page": page,
         "pages": pages,
-        "total": total
+        "total": total,
+        "search": search
     })
 
 
