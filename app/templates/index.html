@@ -100,52 +100,33 @@
       <div class="col-lg-8">
 
         <!-- News main -->
-        {% if news_main %}
-        <div class="row mb-4">
-          <div class="col-md-7">
-            <div class="card doc-card">
-              <img src="{{ news_main.image_url }}" class="card-img-top" alt="News image">
-              <div class="card-body">
-                <h5 class="card-title">{{ news_main.title }}</h5>
-                <p class="card-text text-muted">{{ news_main.summary }}</p>
-                <a href="/news/{{ news_main.id }}" class="btn btn-sm btn-primary">Read more</a>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-5">
-            <div class="card h-100 doc-card p-3">
-              <h6 class="mb-2">Featured</h6>
-              <p class="small text-muted">{{ news_main.summary }}</p>
-              <div class="mt-auto">
-                <a href="/news/{{ news_main.id }}" class="btn btn-outline-primary btn-sm">Open</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endif %}
+      <!-- Hero Section: Bản tin nổi bật -->
+{% if news_main %}
+<div class="row mb-5">
+  <div class="col-md-8">
+    <img src="{{ news_main.image_url }}" alt="News Image" class="img-fluid rounded shadow">
+  </div>
+  <div class="col-md-4 d-flex flex-column justify-content-center">
+    <h2 class="fw-bold">{{ news_main.title }}</h2>
+    <p>{{ news_main.summary[:250] }}{% if news_main.summary|length > 250 %}...{% endif %}</p>
+    <a href="/news/{{ news_main.id }}" class="btn btn-primary">Đọc tiếp</a>
+  </div>
+</div>
+{% endif %}
 
-        <!-- News list -->
-        <h4 class="mb-3">Other News</h4>
-        <div class="row mb-4">
-          {% for news in news_list %}
-          <div class="col-md-6 mb-3">
-            <div class="card h-100 doc-card">
-              <div class="row g-0">
-                <div class="col-4">
-                  <img src="{{ news.image_url }}" class="img-fluid rounded-start" alt="...">
-                </div>
-                <div class="col-8">
-                  <div class="card-body">
-                    <h6 class="card-title">{{ news.title }}</h6>
-                    <p class="card-text small text-muted">{{ news.summary }}</p>
-                    <a href="/news/{{ news.id }}" class="btn btn-sm btn-outline-primary">View</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
+<!-- Other News -->
+{% if news_list %}
+<h3 class="mb-3">Tin tức khác</h3>
+<div class="list-group mb-5">
+  {% for news in news_list[:6] %}
+    <a href="/news/{{ news.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+      <span>{{ news.title[:20] }}{% if news.title|length > 20 %}...{% endif %}</span>
+      <small class="text-muted">🕒 {{ news.created_at.strftime('%d/%m/%Y') }}</small>
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+
 
         <!-- Document list -->
         <h4 class="mb-3">Documents</h4>
