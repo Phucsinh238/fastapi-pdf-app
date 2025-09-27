@@ -33,10 +33,14 @@ s3 = boto3.client(
 
 # 🏠 Trang chủ
 @router.get("/", response_class=HTMLResponse)
-def home(request: Request, page: int = Query(1, ge=1)):
+def home(
+    request: Request,
+    page: int = Query(1, ge=1),
+    news_page: int = Query(1, ge=1)  # thêm phân trang cho news
+):
     with engine.connect() as conn:
+        # ====== Documents ======
         total_docs = conn.execute(text("SELECT COUNT(*) FROM documents")).scalar() or 0
-
         total_pages = math.ceil(total_docs / ITEMS_PER_PAGE) if total_docs else 1
         offset = (page - 1) * ITEMS_PER_PAGE
 
@@ -51,18 +55,28 @@ def home(request: Request, page: int = Query(1, ge=1)):
         )
         documents = result.mappings().all()
 
-    news = get_news(limit=7)
-    news_main = news[0] if news else None
-    news_list = news[1:] if len(news) > 1 else []
+    # ====== News phân trang ======
+    NEWS_PER_PAGE = 6
+    all_news = get_news(limit=9999)   # lấy tất cả, hoặc viết query riêng cho phân trang
+    total_news = len(all_news)
+    news_total_pages = math.ceil(total_news / NEWS_PER_PAGE) if total_news else 1
 
-    
+    start = (news_page - 1) * NEWS_PER_PAGE
+    end = start + NEWS_PER_PAGE
+    news_paginated = all_news[start:end]
+
+    news_main = news_paginated[0] if news_paginated else None
+    news_list = news_paginated[1:] if len(news_paginated) > 1 else []
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "documents": documents,
         "page": page,
         "total_pages": total_pages,
         "news_main": news_main,
-        "news_list": news_list
+        "news_list": news_list,
+        "news_page": news_page,
+        "news_total_pages": news_total_pages
     })
 
 
