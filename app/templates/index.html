@@ -127,6 +127,26 @@
 </div>
 {% endif %}
 
+<!-- Pagination cho news -->
+<nav aria-label="News pagination">
+  <ul class="pagination justify-content-center">
+    {% if news_page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="/?news_page={{ news_page-1 }}&page={{ page }}">⬅ Trước</a>
+      </li>
+    {% endif %}
+    {% for p in range(1, news_total_pages+1) %}
+      <li class="page-item {% if p == news_page %}active{% endif %}">
+        <a class="page-link" href="/?news_page={{ p }}&page={{ page }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+    {% if news_page < news_total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="/?news_page={{ news_page+1 }}&page={{ page }}">Tiếp ➡</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
 
         <!-- Document list -->
         <h4 class="mb-3">Documents</h4>
