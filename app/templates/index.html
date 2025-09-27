@@ -160,7 +160,7 @@
                     <h6 class="card-title mb-0" style="font-size:1rem">{{ doc.filename }}</h6>
                     <!--  <span class="price-badge">{{ '%.2f'|format(doc_price) }} USD</span>-->
                      {% if request.session.get("role") in ['admin','superadmin'] %}
-                         <span class="price-badge">{{ '%.2f'|format(doc_price) }} USD</span>-->
+                         <span class="price-badge">{{ '%.2f'|format(doc_price) }} USD</span>
                       {% else %}
                         <a href="/pay/{{ doc.id }}" class="btn btn-outline-warning btn-sm w-100">
                          <!-- 💳 Buy full document ({{ '%.2f'|format(doc_price) }} USD)-->
