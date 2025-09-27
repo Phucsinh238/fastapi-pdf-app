@@ -158,7 +158,16 @@
                 <div class="card-body d-flex flex-column">
                   <div class="d-flex justify-content-between align-items-start mb-2">
                     <h6 class="card-title mb-0" style="font-size:1rem">{{ doc.filename }}</h6>
-                    <span class="price-badge">{{ '%.2f'|format(doc_price) }} USD</span>
+                    <!--  <span class="price-badge">{{ '%.2f'|format(doc_price) }} USD</span>-->
+                     {% if request.session.get("role") in ['admin','superadmin'] %}
+                         <span class="price-badge">{{ '%.2f'|format(doc_price) }} USD</span>-->
+                      {% else %}
+                        <a href="/pay/{{ doc.id }}" class="btn btn-outline-warning btn-sm w-100">
+                         <!-- 💳 Buy full document ({{ '%.2f'|format(doc_price) }} USD)-->
+                        💳 Open
+                        </a>
+                      {% endif %}
+                    
                   </div>
                   <p class="card-meta mb-2">📤 {{ doc.uploaded_by or 'Unknown' }} • ⏰ {{ doc.upload_time }}</p>
 
