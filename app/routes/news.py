@@ -6,7 +6,7 @@ from datetime import datetime
 from math import ceil
 from sqlalchemy import text
 import uuid
-
+from fastapi.templating import Jinja2Templates
 from app.database import get_db
 from app.models import News
 from app.services.news_service import get_news, get_news_detail
