@@ -26,7 +26,11 @@
       <input type="file" name="image" class="form-control">
       {% if news.image_url %}
         <div class="mt-2">
-          <img src="{{ news.image_url }}" class="img-fluid rounded shadow" style="max-width: 200px;">
+          <!-- Proxy ảnh qua route /news/image/{key} -->
+          <img src="/news/image/{{ news.image_url }}" 
+               class="img-fluid rounded shadow" 
+               style="max-width: 200px;"
+               alt="{{ news.title }}">
         </div>
       {% endif %}
     </div>
