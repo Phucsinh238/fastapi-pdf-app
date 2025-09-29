@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi import Depends, Form, UploadFile, File
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -29,6 +29,15 @@ s3 = boto3.client(
     aws_secret_access_key=R2_SECRET_KEY,
 )
 
+# ---------------- Proxy ảnh từ R2 ----------------
+@router.get("/news/image/{key:path}")
+def get_news_image(key: str):
+    try:
+        obj = s3.get_object(Bucket=R2_BUCKET, Key=key)
+        return StreamingResponse(obj["Body"], media_type=obj["ContentType"])
+    except Exception:
+        raise HTTPException(status_code=404, detail="Image not found")
+
 
 # ---------------- Admin: Form tạo tin ----------------
 @router.get("/admin/news/new")
@@ -50,7 +59,7 @@ async def create_news(
     if request.session.get("role") not in ["admin", "superadmin"]:
         return RedirectResponse("/", status_code=303)
 
-    image_url = None
+    image_key = None
     if image:
         ext = image.filename.split(".")[-1]
         key = f"news/{uuid.uuid4()}.{ext}"
@@ -62,14 +71,14 @@ async def create_news(
             key,
             ExtraArgs={"ContentType": image.content_type}
         )
-        # 🔗 Public URL
-        image_url = f"{R2_ENDPOINT}/{R2_BUCKET}/{key}"
+        # ❗ chỉ lưu key (không lưu URL)
+        image_key = key
 
     new_item = News(
         title=title,
         summary=summary,
         content=content,
-        image_url=image_url,
+        image_url=image_key,
         created_at=datetime.now()
     )
     db.add(new_item)
@@ -173,7 +182,7 @@ async def update_news(
             key,
             ExtraArgs={"ContentType": image.content_type}
         )
-        news.image_url = f"{R2_ENDPOINT}/{R2_BUCKET}/{key}"
+        news.image_url = key   # ❗ chỉ lưu key
 
     db.commit()
     db.refresh(news)
@@ -191,4 +200,4 @@ def delete_news(news_id: int, request: Request, db: Session = Depends(get_db)):
         db.delete(news)
         db.commit()
 
-    return RedirectResponse("/admin/news", status_code=303)
+    return Redire
