@@ -101,10 +101,15 @@
 
         <!-- News main -->
       <!-- Hero Section: Bản tin nổi bật -->
+<!-- News main -->
 {% if news_main %}
 <div class="row mb-5">
   <div class="col-md-8">
-    <img src="{{ news_main.image_url }}" alt="News Image" class="img-fluid rounded shadow">
+    {% if news_main.image_url %}
+      <img src="/news/image/{{ news_main.image_url }}" 
+           alt="{{ news_main.title }}" 
+           class="img-fluid rounded shadow">
+    {% endif %}
   </div>
   <div class="col-md-4 d-flex flex-column justify-content-center">
     <h2 class="fw-bold">{{ news_main.title }}</h2>
@@ -119,13 +124,22 @@
 <h3 class="mb-3">Tin tức khác</h3>
 <div class="list-group mb-5">
   {% for news in news_list[:6] %}
-    <a href="/news/{{ news.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-      <span>{{ news.title[:20] }}{% if news.title|length > 20 %}...{% endif %}</span>
+    <a href="/news/{{ news.id }}" 
+       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        {% if news.image_url %}
+          <img src="/news/image/{{ news.image_url }}" 
+               alt="{{ news.title }}" 
+               style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
+        {% endif %}
+        <span>{{ news.title[:40] }}{% if news.title|length > 40 %}...{% endif %}</span>
+      </div>
       <small class="text-muted">🕒 {{ news.created_at.strftime('%d/%m/%Y') }}</small>
     </a>
   {% endfor %}
 </div>
 {% endif %}
+
 
 <!-- Pagination cho news -->
 <nav aria-label="News pagination">
