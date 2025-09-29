@@ -188,7 +188,6 @@ async def update_news(
     db.refresh(news)
     return RedirectResponse("/admin/news", status_code=303)
 
-
 # ---------------- Xoá tin ----------------
 @router.get("/admin/news/delete/{news_id}")
 def delete_news(news_id: int, request: Request, db: Session = Depends(get_db)):
@@ -197,7 +196,14 @@ def delete_news(news_id: int, request: Request, db: Session = Depends(get_db)):
 
     news = db.query(News).filter(News.id == news_id).first()
     if news:
+        # Nếu có ảnh thì xoá khỏi R2 luôn (không bắt buộc, tuỳ nhu cầu)
+        if news.image_url:
+            try:
+                s3.delete_object(Bucket=R2_BUCKET, Key=news.image_url)
+            except Exception:
+                pass
+
         db.delete(news)
         db.commit()
 
-    return Redire
+    return RedirectResponse("/admin/news", status_code=303)
