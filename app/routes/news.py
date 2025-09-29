@@ -4,16 +4,30 @@ from fastapi import Depends, Form, UploadFile, File
 from sqlalchemy.orm import Session
 from datetime import datetime
 from math import ceil
-from sqlalchemy import text
 import uuid
+import boto3
 from fastapi.templating import Jinja2Templates
 from app.database import get_db
 from app.models import News
 from app.services.news_service import get_news, get_news_detail
-from app.r2_client import s3_client, R2_BUCKET_NAME, R2_ENDPOINT_URL
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+# ==============================
+# 🔧 Config Cloudflare R2
+# ==============================
+R2_ACCESS_KEY = "24bcd7f68391b74c3712d0919b6a0c66"
+R2_SECRET_KEY = "8eb34c1864c1e90ec42f67d0217aa2e3e7fac5225dd8b32e52b3575536ac6f4b"
+R2_BUCKET = "fastapi-pdf-app"
+R2_ENDPOINT = "https://bcdb766b6e3d7d90bf451671a1d7c3de.r2.cloudflarestorage.com"
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=R2_ENDPOINT,
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_KEY,
+)
 
 
 # ---------------- Admin: Form tạo tin ----------------
@@ -42,13 +56,14 @@ async def create_news(
         key = f"news/{uuid.uuid4()}.{ext}"
 
         # Upload file lên Cloudflare R2
-        s3_client.upload_fileobj(
+        s3.upload_fileobj(
             image.file,
-            R2_BUCKET_NAME,
+            R2_BUCKET,
             key,
-            ExtraArgs={"ContentType": image.content_type, "ACL": "public-read"}
+            ExtraArgs={"ContentType": image.content_type}
         )
-        image_url = f"{R2_ENDPOINT_URL}/{R2_BUCKET_NAME}/{key}"
+        # 🔗 Public URL
+        image_url = f"{R2_ENDPOINT}/{R2_BUCKET}/{key}"
 
     new_item = News(
         title=title,
@@ -152,13 +167,13 @@ async def update_news(
         ext = image.filename.split(".")[-1]
         key = f"news/{uuid.uuid4()}.{ext}"
 
-        s3_client.upload_fileobj(
+        s3.upload_fileobj(
             image.file,
-            R2_BUCKET_NAME,
+            R2_BUCKET,
             key,
-            ExtraArgs={"ContentType": image.content_type, "ACL": "public-read"}
+            ExtraArgs={"ContentType": image.content_type}
         )
-        news.image_url = f"{R2_ENDPOINT_URL}/{R2_BUCKET_NAME}/{key}"
+        news.image_url = f"{R2_ENDPOINT}/{R2_BUCKET}/{key}"
 
     db.commit()
     db.refresh(news)
