@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException 
 from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 import paypalrestsdk
 from app.database import get_document_by_id
 import boto3, io
 
 # ==============================
-# 🔧 Config PayPal
+# 🔧 Config PayPal (LIVE)
 # ==============================
 paypalrestsdk.configure({
-    "mode": "sandbox",  # hoặc "live"
-    "client_id": "Aeub7AkBsgWgmX0SvYEh4XIbqpfRWlTF2QYzneH16RvgwSR_rZMO9NQ6I-vUkTMdhJV3GfEFFX9Qj-L7",
-    "client_secret": "ELjY_MLftZa0jlYsFqdj5fxJxs1znLFgKDKV9Il0EBtzmSjK7WB7KSmKooM1nYaU5Y0YhXWgEl1Njmuz"
+    "mode": "live",   # 🔥 LIVE MODE 
+    "client_id": "AfRAxtTLX8MQiNBF_WPZpHIeK3rr4qIP_jKWylw33oZIL_9pHmH0YlwPX5u6ZtVryLC2uR5EDBTdB-OJ",
+    "client_secret": "EGo2TwZrGZO12ZlMIc3TgnW-ReDv4skxIAbLeRRx8OgW5uzqkfIanwrX2GBe2DTr8b0gOxsYKBEGkAFd"
 })
 
 router = APIRouter()
@@ -38,7 +38,10 @@ def create_payment(file_id: int, request: Request):
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    price = float(document.get("price", 19.99))  # fallback nếu chưa có giá
+    # Giá fallback
+    price = float(document.get("price", 19.99))
+
+    # URL động
     base_url = str(request.base_url).rstrip("/")
 
     payment = paypalrestsdk.Payment({
@@ -72,15 +75,16 @@ def create_payment(file_id: int, request: Request):
         raise HTTPException(status_code=500, detail="Payment creation failed.")
 
 
-
 # ✅ Thanh toán thành công
 @router.get("/payment/success")
 def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int):
     payment = paypalrestsdk.Payment.find(paymentId)
 
     if payment.execute({"payer_id": PayerID}):
+
         if "paid_files" not in request.session:
             request.session["paid_files"] = []
+
         if file_id not in request.session["paid_files"]:
             request.session["paid_files"].append(file_id)
 
@@ -126,7 +130,7 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
                     <p>Your file <b>{document["filename"]}</b> is ready.</p>
 
                     <p><strong>We are starting your download automatically...</strong></p>
-                    <p>If it does not start, click the button below or right-click and choose <i>“Save link as...”</i>.</p>
+                    <p>If it does not start, click the button below.</p>
 
                     <a class="button" href="{download_url}" download="{document["filename"]}">⬇️ Download File</a>
 
@@ -136,7 +140,6 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
                 </div>
 
                 <script>
-                    // Try to auto-download after 1 second
                     setTimeout(function() {{
                         var a = document.createElement("a");
                         a.href = "{download_url}";
@@ -154,8 +157,6 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
         raise HTTPException(status_code=400, detail="Payment failed.")
 
 
-
-
 # ❌ Thanh toán bị hủy
 @router.get("/payment/cancel")
 def payment_cancel(request: Request):
@@ -164,7 +165,6 @@ def payment_cancel(request: Request):
     return RedirectResponse(url=base_url, status_code=303)
 
 
-# 📥 Download file từ R2 (chỉ cho người đã trả tiền)
 # 📥 Download file từ R2 (chỉ cho người đã trả tiền)
 @router.get("/download/{file_id}")
 def download_file(request: Request, file_id: int):
@@ -183,12 +183,9 @@ def download_file(request: Request, file_id: int):
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
     file_obj.seek(0)
-    # Ép buộc tải file xuống (mọi trình duyệt)
+
     return StreamingResponse(
         file_obj,
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{document["filename"]}"'}
     )
-
-
-
