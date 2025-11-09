@@ -10,7 +10,9 @@ from app.database import Base, engine
 from app.models import User, Document, LoginLog, AccessLog
 from r2_router import router as r2_router
 from app.routes import news
-app = FastAPI()
+#app = FastAPI()
+app = FastAPI(trust_proxy_headers=True)
+
 
 # Gắn router R2
 #app.include_router(r2_router)
