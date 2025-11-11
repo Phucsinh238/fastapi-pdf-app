@@ -13,9 +13,14 @@
 #    uploaded_by: str
 #    upload_date: str
 # app/models.py
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
-from .database import Base
-from sqlalchemy import Text
+#from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+#from .database import Base
+#from sqlalchemy import Text
+#from datetime import datetime
+#from app.database import Base
+
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, ForeignKey, Text
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
@@ -31,6 +36,9 @@ class User(Base):
     active = Column(Boolean, default=True)
     role = Column(String, default="user")
 
+    # Quan hệ với purchases
+    purchases = relationship("Purchase", back_populates="user", cascade="all, delete-orphan")
+
 
 # Bảng documents
 class Document(Base):
@@ -41,6 +49,23 @@ class Document(Base):
     filepath = Column(String, nullable=False)
     uploaded_by = Column(String)
     upload_time = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Quan hệ với purchases
+    purchases = relationship("Purchase", back_populates="document", cascade="all, delete-orphan")
+
+
+# Bảng purchases
+class Purchase(Base):
+    __tablename__ = "purchases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    document_id = Column(Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False)
+    purchased_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Quan hệ ORM
+    user = relationship("User", back_populates="purchases")
+    document = relationship("Document", back_populates="purchases")
 
 
 # Bảng login_log
@@ -64,8 +89,7 @@ class AccessLog(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 
-
-
+# Bảng news
 class News(Base):
     __tablename__ = "news"
 
@@ -75,4 +99,3 @@ class News(Base):
     content = Column(Text)
     image_url = Column(String)
     created_at = Column(DateTime, default=datetime.now)
-
