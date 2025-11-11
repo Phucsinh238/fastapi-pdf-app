@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Request, HTTPException 
+from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 import paypalrestsdk
-from app.database import get_document_by_id
+from app.database import get_document_by_id, get_db
+from sqlalchemy.orm import Session
+from app.models import Purchase, User, Document
 import boto3, io
+from datetime import datetime
 
 # ==============================
 # 🔧 Config PayPal (LIVE)
@@ -38,10 +41,7 @@ def create_payment(file_id: int, request: Request):
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # Giá fallback
     price = float(document.get("price", 19.99))
-
-    # URL động
     base_url = str(request.base_url).rstrip("/")
 
     payment = paypalrestsdk.Payment({
@@ -77,84 +77,56 @@ def create_payment(file_id: int, request: Request):
 
 # ✅ Thanh toán thành công
 @router.get("/payment/success")
-def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int):
+def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int, db: Session = Depends(get_db)):
     payment = paypalrestsdk.Payment.find(paymentId)
-
-    if payment.execute({"payer_id": PayerID}):
-
-        if "paid_files" not in request.session:
-            request.session["paid_files"] = []
-
-        if file_id not in request.session["paid_files"]:
-            request.session["paid_files"].append(file_id)
-
-        document = get_document_by_id(file_id)
-        if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
-
-        base_url = str(request.base_url).rstrip("/")
-        download_url = f"{base_url}/download/{file_id}"
-
-        html_content = f"""
-        <html>
-            <head>
-                <meta charset="utf-8" />
-                <title>Download</title>
-                <style>
-                    body {{ font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }}
-                    .box {{
-                        background: #fff;
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                        padding: 20px;
-                        max-width: 600px;
-                        margin: auto;
-                        text-align: center;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    }}
-                    a.button {{
-                        display: inline-block;
-                        margin-top: 15px;
-                        padding: 10px 20px;
-                        background: #0070f3;
-                        color: white;
-                        border-radius: 6px;
-                        text-decoration: none;
-                    }}
-                    a.button:hover {{ background: #0059c9; }}
-                </style>
-            </head>
-            <body>
-                <div class="box">
-                    <h2>✅ Payment Successful!</h2>
-                    <p>Your file <b>{document["filename"]}</b> is ready.</p>
-
-                    <p><strong>We are starting your download automatically...</strong></p>
-                    <p>If it does not start, click the button below.</p>
-
-                    <a class="button" href="{download_url}" download="{document["filename"]}">⬇️ Download File</a>
-
-                    <p style="margin-top:20px;">
-                        <a href="{base_url}">⬅️ Back to Home</a>
-                    </p>
-                </div>
-
-                <script>
-                    setTimeout(function() {{
-                        var a = document.createElement("a");
-                        a.href = "{download_url}";
-                        a.download = "{document["filename"]}";
-                        document.body.appendChild(a);
-                        a.click();
-                    }}, 1000);
-                </script>
-            </body>
-        </html>
-        """
-        return HTMLResponse(content=html_content)
-
-    else:
+    if not payment.execute({"payer_id": PayerID}):
         raise HTTPException(status_code=400, detail="Payment failed.")
+
+    # 🧩 Kiểm tra user đăng nhập
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="User must be logged in to complete payment.")
+
+    # 🧩 Ghi vào session cũ
+    if "paid_files" not in request.session:
+        request.session["paid_files"] = []
+    if file_id not in request.session["paid_files"]:
+        request.session["paid_files"].append(file_id)
+
+    # 🧩 Ghi vào bảng purchases
+    existing = db.query(Purchase).filter(
+        Purchase.user_id == user_id,
+        Purchase.document_id == file_id
+    ).first()
+
+    if not existing:
+        new_purchase = Purchase(
+            user_id=user_id,
+            document_id=file_id,
+            purchased_at=datetime.utcnow()
+        )
+        db.add(new_purchase)
+        db.commit()
+
+    document = get_document_by_id(file_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    base_url = str(request.base_url).rstrip("/")
+    download_url = f"{base_url}/download/{file_id}"
+
+    html_content = f"""
+    <html>
+        <head><meta charset="utf-8" /><title>Download</title></head>
+        <body style="font-family: Arial; text-align: center; margin-top: 50px;">
+            <h2>✅ Payment Successful!</h2>
+            <p>Your file <b>{document["filename"]}</b> is ready.</p>
+            <a href="{download_url}" style="background: #0070f3; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">⬇️ Download File</a>
+            <script>setTimeout(() => {{ window.location = "{download_url}"; }}, 1000);</script>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
 
 # ❌ Thanh toán bị hủy
@@ -165,27 +137,41 @@ def payment_cancel(request: Request):
     return RedirectResponse(url=base_url, status_code=303)
 
 
-# 📥 Download file từ R2 (chỉ cho người đã trả tiền)
+# 📥 Download file (check login + quyền)
 @router.get("/download/{file_id}")
-def download_file(request: Request, file_id: int):
-    paid_files = request.session.get("paid_files", [])
-    if file_id not in paid_files:
-        raise HTTPException(status_code=403, detail="You must pay to download this file.")
+def download_file(request: Request, file_id: int, db: Session = Depends(get_db)):
+    # 🧩 Kiểm tra login
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="You must be logged in to download files.")
 
-    document = get_document_by_id(file_id)
+    # 🧩 Lấy file
+    document = db.query(Document).filter(Document.id == file_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    # 🧩 Kiểm tra quyền tải
+    purchase = db.query(Purchase).filter(
+        Purchase.user_id == user_id,
+        Purchase.document_id == file_id
+    ).first()
+
+    user = db.query(User).filter(User.id == user_id).first()
+    is_uploader = document.uploaded_by == user.username if user else False
+
+    if not purchase and not is_uploader:
+        raise HTTPException(status_code=403, detail="You do not have access to this file.")
+
+    # 🧩 Tải file từ R2
     file_obj = io.BytesIO()
     try:
-        s3.download_fileobj(R2_BUCKET, document["r2_key"], file_obj)
+        s3.download_fileobj(R2_BUCKET, document.filepath, file_obj)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
     file_obj.seek(0)
-
     return StreamingResponse(
         file_obj,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{document["filename"]}"'}
+        headers={"Content-Disposition": f'attachment; filename="{document.filename}"'}
     )
