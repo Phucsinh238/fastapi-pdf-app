@@ -165,8 +165,15 @@ async def login(
     if db_active != 1:
         raise HTTPException(status_code=403, detail="Account not activated")
 
+    # ✅ Ghi session đầy đủ
+    request.session["user_id"] = db_id         # <--- thêm dòng này
     request.session["user"] = db_username
     request.session["role"] = db_role
+
+# (Tuỳ chọn) ghi log đăng nhập hoặc cập nhật last_login
+    # with engine.connect() as conn:
+    #     conn.execute(text("INSERT INTO login_log (username, ip) VALUES (:u, :ip)"),
+    #                  {"u": db_username, "ip": request.client.host})
 
     return RedirectResponse(url="/", status_code=302)
 
