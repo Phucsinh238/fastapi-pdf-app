@@ -5,13 +5,13 @@ from fastapi.templating import Jinja2Templates
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 import sqlite3
 import hashlib
-from app.database import SessionLocal
+from app.database import SessionLocal, get_db
 from app.models import User
 from app.utils import generate_confirmation_token, confirm_token
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-
+#from app.database import get_db
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 from datetime import datetime
