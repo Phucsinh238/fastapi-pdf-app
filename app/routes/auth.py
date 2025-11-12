@@ -156,10 +156,11 @@ async def login(
             {"username": username}
         ).fetchone()
 
+
     if not result:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-     db_id, db_username, db_password, db_active, db_role = result
+    db_id, db_username, db_password, db_active, db_role = result
 
     if db_password != hashed:
         raise HTTPException(status_code=401, detail="Invalid credentials")
