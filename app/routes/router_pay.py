@@ -120,7 +120,7 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
         <head><meta charset="utf-8" /><title>Download</title></head>
         <body style="font-family: Arial; text-align: center; margin-top: 50px;">
             <h2>✅ Payment Successful!</h2>
-            <p>Your file <b>{document["filename"]}</b> is ready.</p>
+            <p>Your file <b>{document["filename"]}</b> is ready. if file is not dounloaded automatically, please do right click on Download file and click save link as...</p>
             <a href="{download_url}" style="background: #0070f3; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">⬇️ Download File</a>
             <script>setTimeout(() => {{ window.location = "{download_url}"; }}, 1000);</script>
         </body>
