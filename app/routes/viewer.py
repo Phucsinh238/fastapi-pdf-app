@@ -10,6 +10,12 @@ from decimal import Decimal
 from app.database import get_document_by_id
 from app.services.news_service import get_news
 
+from app.models import Purchase, User, Document
+from app.database import get_db
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
@@ -130,20 +136,60 @@ def view_file(
 
 
 # 📥 Download file từ R2
+#@router.get("/download/{file_id}")
+#def download_file(file_id: int):
+#    document = get_document_by_id(file_id)
+#    if not document:
+#        raise HTTPException(status_code=404, detail="Document not found")
+
+#   file_obj = io.BytesIO()
+#    s3.download_fileobj(R2_BUCKET, document["filename"], file_obj)
+#    file_obj.seek(0)
+
+#    return StreamingResponse(
+#        file_obj,
+#        media_type="application/octet-stream",
+#        headers={"Content-Disposition": f"attachment; filename={document['filename']}"}
+#    )
+
+
+
+# 📥 Download file từ R2 (chỉ cho người có quyền)
 @router.get("/download/{file_id}")
-def download_file(file_id: int):
-    document = get_document_by_id(file_id)
+def download_file(
+    request: Request,
+    file_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 🔍 Kiểm tra file tồn tại
+    document = db.query(Document).filter(Document.id == file_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    file_obj = io.BytesIO()
-    s3.download_fileobj(R2_BUCKET, document["filename"], file_obj)
-    file_obj.seek(0)
+    # 🔐 Kiểm tra quyền sở hữu hoặc đã mua
+    purchased = db.query(Purchase).filter(
+        Purchase.user_id == current_user.id,
+        Purchase.document_id == file_id
+    ).first()
 
+    is_uploader = document.uploaded_by == current_user.username
+
+    if not purchased and not is_uploader:
+        raise HTTPException(status_code=403, detail="You do not have access to this file.")
+
+    # ✅ Nếu hợp lệ → tải file từ R2
+    file_obj = io.BytesIO()
+    try:
+        s3.download_fileobj(R2_BUCKET, document.filename, file_obj)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
+
+    file_obj.seek(0)
     return StreamingResponse(
         file_obj,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={document['filename']}"}
+        headers={"Content-Disposition": f'attachment; filename="{document.filename}"'}
     )
 
 
