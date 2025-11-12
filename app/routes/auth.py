@@ -152,7 +152,7 @@ async def login(
 
     with engine.connect() as conn:
         result = conn.execute(
-            text("SELECT id,username, password, active, role FROM users WHERE username = :username"),
+            text("SELECT id, username, password, active, role FROM users WHERE username = :username"),
             {"username": username}
         ).fetchone()
 
