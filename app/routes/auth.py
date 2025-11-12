@@ -190,23 +190,33 @@ def logout(request: Request):
 
 # app/routes/auth.py
 
-"""
+# """
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+#def get_current_user(token: str = Depends(oauth2_scheme)):
     # Tạm thời chấp nhận mọi token, hoặc kiểm tra token ở đây
-    if token != "secret-token":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
-    return {"username": "nickynguyen", "role": "admin"}  # Hoặc user bình thường
-"""
+#    if token != "secret-token":
+#        raise HTTPException(
+#            status_code=status.HTTP_401_UNAUTHORIZED,
+#            detail="Invalid token",
+#        )
+#    return {"username": "nickynguyen", "role": "admin"}  # Hoặc user bình thường
+#"""
 
-def get_current_user(request: Request):
-    username = request.session.get("user")
-    role = request.session.get("role")
+#def get_current_user(request: Request):
+#    username = request.session.get("user")
+#    role = request.session.get("role")
 
-    if not username or not role:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+ #   if not username or not role:
+ #       raise HTTPException(status_code=401, detail="Not authenticated")
 
-    return {"username": username, "role": role}
+ #   return {"username": username, "role": role}
+
+def get_current_user(request: Request, db: Session = Depends(get_db)):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="You must be logged in")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid session user")
+    return user
