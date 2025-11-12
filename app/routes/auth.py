@@ -8,6 +8,7 @@ import hashlib
 from app.database import SessionLocal, get_db
 from app.models import User
 from app.utils import generate_confirmation_token, confirm_token
+from sqlalchemy.orm import Session
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
