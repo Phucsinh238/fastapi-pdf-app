@@ -152,14 +152,14 @@ async def login(
 
     with engine.connect() as conn:
         result = conn.execute(
-            text("SELECT username, password, active, role FROM users WHERE username = :username"),
+            text("SELECT id,username, password, active, role FROM users WHERE username = :username"),
             {"username": username}
         ).fetchone()
 
     if not result:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    db_username, db_password, db_active, db_role = result
+     db_id, db_username, db_password, db_active, db_role = result
 
     if db_password != hashed:
         raise HTTPException(status_code=401, detail="Invalid credentials")
