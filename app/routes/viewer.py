@@ -152,15 +152,13 @@ def view_file(
 #        headers={"Content-Disposition": f"attachment; filename={document['filename']}"}
 #    )
 
-
-
 # 📥 Download file từ R2 (chỉ cho người có quyền)
 @router.get("/download/{file_id}")
 def download_file(
     request: Request,
     file_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)   # ⬅️ current_user là dict
 ):
     # 🔍 Kiểm tra file tồn tại
     document = db.query(Document).filter(Document.id == file_id).first()
@@ -169,11 +167,11 @@ def download_file(
 
     # 🔐 Kiểm tra quyền sở hữu hoặc đã mua
     purchased = db.query(Purchase).filter(
-        Purchase.user_id == current_user.id,
+        Purchase.user_id == current_user["id"],
         Purchase.document_id == file_id
     ).first()
 
-    is_uploader = document.uploaded_by == current_user.username
+    is_uploader = document.uploaded_by == current_user["username"]
 
     if not purchased and not is_uploader:
         raise HTTPException(status_code=403, detail="You do not have access to this file.")
