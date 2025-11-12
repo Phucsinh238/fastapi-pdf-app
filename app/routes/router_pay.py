@@ -118,12 +118,33 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
     html_content = f"""
     <html>
         <head><meta charset="utf-8" /><title>Download</title></head>
-        <body style="font-family: Arial; text-align: center; margin-top: 50px;">
-            <h2>✅ Payment Successful!</h2>
-            <p>Your file <b>{document["filename"]}</b> is ready. if file is not dounloaded automatically, please do right click on Download file and click save link as...</p>
-            <a href="{download_url}" style="background: #0070f3; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">⬇️ Download File</a>
-            <script>setTimeout(() => {{ window.location = "{download_url}"; }}, 1000);</script>
-        </body>
+        <body style="font-family: Arial; text-align: center; margin-top: 80px; font-size: 20px; color: #222;">
+    <h2 style="font-size: 32px; color: #28a745;">✅ Payment Successful!</h2>
+
+    <p style="font-size: 20px; max-width: 700px; margin: 20px auto;">
+        Your file <b>{document["filename"]}</b> is ready.<br>
+        If the file is not downloaded automatically, please right-click the button below and select <b>"Save link as..."</b>
+    </p>
+
+    <a href="{download_url}" 
+       style="background: #0070f3; 
+              color: white; 
+              padding: 14px 28px; 
+              border-radius: 8px; 
+              text-decoration: none; 
+              font-size: 22px; 
+              display: inline-block;
+              margin-top: 20px;">
+       ⬇️ Download File
+    </a>
+
+    <script>
+        setTimeout(() => {{
+            window.location = "{download_url}";
+        }}, 1000);
+    </script>
+</body>
+
     </html>
     """
     return HTMLResponse(content=html_content)
