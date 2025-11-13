@@ -76,10 +76,24 @@ async def create_news(
         image_key = key
 
     # ✅ Chuẩn hóa link — chỉ lưu phần đường dẫn (relative)
+   # if link:
+   #     base_url = str(request.base_url).rstrip("/")
+   #     if link.startswith(base_url):
+   #         link = link.replace(base_url, "", 1)  # chỉ giữ /view/xx
     if link:
         base_url = str(request.base_url).rstrip("/")
-        if link.startswith(base_url):
-            link = link.replace(base_url, "", 1)  # chỉ giữ /view/xx
+        # Cắt domain ra, bất kể http hay https
+        link = link.replace("https://", "").replace("http://", "")
+        base_domain = base_url.replace("https://", "").replace("http://", "")
+
+    # Nếu link có chứa domain của mình → chỉ giữ phần sau domain
+    if base_domain in link:
+        parts = link.split(base_domain, 1)
+        link = parts[-1] if len(parts) > 1 else link
+
+    # Đảm bảo luôn bắt đầu bằng "/"
+    if not link.startswith("/"):
+        link = "/" + link
 
     
     new_item = News(
