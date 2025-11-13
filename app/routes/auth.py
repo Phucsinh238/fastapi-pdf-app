@@ -172,6 +172,11 @@ async def login(
     request.session["user"] = db_username
     request.session["role"] = db_role
 
+
+    next_url = request.query_params.get("next")
+    if next_url:
+        return RedirectResponse(url=next_url, status_code=303)
+
 # (Tuỳ chọn) ghi log đăng nhập hoặc cập nhật last_login
     # with engine.connect() as conn:
     #     conn.execute(text("INSERT INTO login_log (username, ip) VALUES (:u, :ip)"),
