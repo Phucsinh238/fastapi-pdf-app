@@ -104,12 +104,26 @@ def news_detail(request: Request, news_id: int):
     if not news_item:
         raise HTTPException(status_code=404, detail="News not found")
 
+#    return templates.TemplateResponse("news_detail.html", {
+#        "request": request,
+#        "news": news_item
+#    })
+
+ # ✅ Ghép domain động cho link đính kèm
+    base_url = str(request.base_url).rstrip("/")
+    full_link = None
+    if news_item.link:
+        # Nếu link đã là URL đầy đủ (bắt đầu bằng http) thì giữ nguyên
+        if news_item.link.startswith("http"):
+            full_link = news_item.link
+        else:
+            full_link = f"{base_url}{news_item.link}"
+
     return templates.TemplateResponse("news_detail.html", {
         "request": request,
-        "news": news_item
+        "news": news_item,
+        "full_link": full_link
     })
-
-
 # ---------------- Danh sách tin trong admin ----------------
 @router.get("/admin/news")
 def admin_news_list(
