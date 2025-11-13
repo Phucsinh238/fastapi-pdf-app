@@ -98,4 +98,5 @@ class News(Base):
     summary = Column(Text)
     content = Column(Text)
     image_url = Column(String)
+    link = Column(String)  # 🔗 Thêm cột link
     created_at = Column(DateTime, default=datetime.now)
