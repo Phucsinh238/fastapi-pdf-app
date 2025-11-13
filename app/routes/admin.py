@@ -49,8 +49,9 @@ async def upload_file(
     price: float = Form(19.99)   # mặc định 19.99 nếu không nhập
 ):
     role = request.session.get("role")
-    username = request.session.get("username")
-
+    #username = request.session.get("username")
+    username = request.session.get("user") or request.session.get("username")
+    
     if role not in ["admin", "superadmin"]:
         raise HTTPException(status_code=403, detail="You are not allowed to upload files.")
 
