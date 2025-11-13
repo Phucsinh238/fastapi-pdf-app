@@ -44,6 +44,13 @@ def create_payment(file_id: int, request: Request):
     price = float(document.get("price", 19.99))
     base_url = str(request.base_url).rstrip("/")
     user_id = request.session.get("user_id")
+
+    if not user_id:
+        # ⚠️ Nếu chưa đăng nhập → chuyển đến trang login, kèm theo redirect_url để quay lại
+        base_url = str(request.base_url).rstrip("/")
+        login_url = f"{base_url}/login?next=/pay/{file_id}"
+        return RedirectResponse(url=login_url, status_code=303)
+
     
     payment = paypalrestsdk.Payment({
         "intent": "sale",
