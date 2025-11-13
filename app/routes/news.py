@@ -75,6 +75,13 @@ async def create_news(
         # ❗ chỉ lưu key (không lưu URL)
         image_key = key
 
+    # ✅ Chuẩn hóa link — chỉ lưu phần đường dẫn (relative)
+    if link:
+        base_url = str(request.base_url).rstrip("/")
+        if link.startswith(base_url):
+            link = link.replace(base_url, "", 1)  # chỉ giữ /view/xx
+
+    
     new_item = News(
         title=title,
         summary=summary,
