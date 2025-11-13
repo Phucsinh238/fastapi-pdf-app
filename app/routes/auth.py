@@ -30,9 +30,9 @@ templates = Jinja2Templates(directory="app/templates")
 
 # Cấu hình SMTP (Gmail SMTP example)
 conf = ConnectionConfig(
-    MAIL_USERNAME="muabanchotang@gmail.com",
-    MAIL_PASSWORD="ggmx httr gcvq eiac",
-    MAIL_FROM="muabanchotang@gmail.com",
+    MAIL_USERNAME="agrireports999@gmail.com",
+    MAIL_PASSWORD="kcsd pcmf xxcu jlsn",
+    MAIL_FROM="agrireports999@gmail.com",
     MAIL_PORT=587,
     MAIL_SERVER="smtp.gmail.com",
     MAIL_STARTTLS = True,         # ✅ thay MAIL_TLS
