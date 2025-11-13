@@ -195,6 +195,7 @@ async def update_news(
     title: str = Form(...),
     summary: str = Form(...),
     content: str = Form(...),
+    link: str = Form(...),             # 🔗 nhận thêm link
     image: UploadFile = File(None)
 ):
     if request.session.get("role") not in ["admin", "superadmin"]:
@@ -220,6 +221,26 @@ async def update_news(
         )
         news.image_url = key   # ❗ chỉ lưu key
 
+   if link:
+        base_url = str(request.base_url).rstrip("/")
+        # Cắt domain ra, bất kể http hay https
+        link = link.replace("https://", "").replace("http://", "")
+        base_domain = base_url.replace("https://", "").replace("http://", "")
+
+    # Nếu link có chứa domain của mình → chỉ giữ phần sau domain
+    if base_domain in link:
+        parts = link.split(base_domain, 1)
+        link = parts[-1] if len(parts) > 1 else link
+
+    # Đảm bảo luôn bắt đầu bằng "/"
+    if not link.startswith("/"):
+        link = "/" + link
+
+
+    news.link = link
+
+
+    
     db.commit()
     db.refresh(news)
     return RedirectResponse("/admin/news", status_code=303)
