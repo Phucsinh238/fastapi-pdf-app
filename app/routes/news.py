@@ -109,21 +109,20 @@ def news_detail(request: Request, news_id: int):
 #        "news": news_item
 #    })
 
- # ✅ Ghép domain động cho link đính kèm
+ # ✅ Ghép domain động cho link đính kèm (hỗ trợ dict)
     base_url = str(request.base_url).rstrip("/")
     full_link = None
-    if news_item.link:
-        # Nếu link đã là URL đầy đủ (bắt đầu bằng http) thì giữ nguyên
-        if news_item.link.startswith("http"):
-            full_link = news_item.link
-        else:
-            full_link = f"{base_url}{news_item.link}"
 
-    return templates.TemplateResponse("news_detail.html", {
-        "request": request,
-        "news": news_item,
-        "full_link": full_link
-    })
+    if "link" in news_item and news_item["link"]:
+        if str(news_item["link"]).startswith("http"):
+            full_link = news_item["link"]
+        else:
+            full_link = f"{base_url}{news_item['link']}"
+
+    return templates.TemplateResponse(
+        "news_detail.html",
+        {"request": request, "news": news_item, "full_link": full_link}
+    )
 # ---------------- Danh sách tin trong admin ----------------
 @router.get("/admin/news")
 def admin_news_list(
