@@ -54,6 +54,7 @@ async def create_news(
     title: str = Form(...),
     summary: str = Form(...),
     content: str = Form(...),
+    link: str = Form(None),             # 🔗 nhận thêm link
     image: UploadFile = File(None)
 ):
     if request.session.get("role") not in ["admin", "superadmin"]:
@@ -79,6 +80,7 @@ async def create_news(
         summary=summary,
         content=content,
         image_url=image_key,
+        link=link,                    # 🔗 lưu link vào DB
         created_at=datetime.now()
     )
     db.add(new_item)
