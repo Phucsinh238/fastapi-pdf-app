@@ -19,6 +19,23 @@
     {{ news.content | safe }}
   </div>
 
+
+
+{% if news.link %}
+  <div class="mt-4 p-3 border rounded bg-light">
+    <h5>🔗 Liên kết đính kèm:</h5>
+    <a href="{{ news.link }}" target="_blank" class="text-decoration-none">
+      <div class="card mt-2 shadow-sm">
+        <img src="https://image.thum.io/get/{{ news.link }}" class="card-img-top" alt="Preview">
+        <div class="card-body">
+          <p class="card-text text-truncate">{{ news.link }}</p>
+        </div>
+      </div>
+    </a>
+  </div>
+{% endif %}
+
+  
   <a href="/" class="btn btn-outline-primary mt-3">⬅ Back to Home</a>
 </body>
 </html>
