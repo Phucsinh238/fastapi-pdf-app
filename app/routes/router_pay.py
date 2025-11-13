@@ -82,55 +82,56 @@ def create_payment(file_id: int, request: Request):
     else:
         raise HTTPException(status_code=500, detail="Payment creation failed.")
 
-
-# ✅ Thanh toán thành công
 @router.get("/payment/success")
-def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int, db: Session = Depends(get_db)):
+def payment_success(
+    request: Request,
+    paymentId: str,
+    PayerID: str,
+    file_id: int,
+    user_id: int = None,       # ← cho phép PayPal redirect kèm user_id
+    db: Session = Depends(get_db)
+):
     payment = paypalrestsdk.Payment.find(paymentId)
+
     if not payment.execute({"payer_id": PayerID}):
         raise HTTPException(status_code=400, detail="Payment failed.")
 
-    # 🧩 Kiểm tra user đăng nhập
-    #user_id = request.session.get("user_id")
-    #if not user_id:
-    #    raise HTTPException(status_code=401, detail="User must be logged in to complete payment.")
-
- # 🧩 Nếu mất session → thử lấy user_id từ query string
-    session_user = request.session.get("user_id")
-    if not session_user:
+    # 🧩 Kiểm tra login (session hoặc query)
+    session_user_id = request.session.get("user_id")
+    if not session_user_id:
         if user_id:
-            session_user = user_id
-            request.session["user_id"] = user_id  # gắn lại cho các request sau
+            session_user_id = user_id
+            request.session["user_id"] = user_id  # Gắn lại session nếu mất
         else:
             raise HTTPException(status_code=401, detail="User must be logged in to complete payment.")
 
-
-    
-    # 🧩 Ghi vào session cũ
+    # 🧩 Ghi session file đã trả tiền
     if "paid_files" not in request.session:
         request.session["paid_files"] = []
     if file_id not in request.session["paid_files"]:
         request.session["paid_files"].append(file_id)
 
-    # 🧩 Ghi vào bảng purchases
+    # 🧩 Ghi vào bảng purchases (chống trùng)
     existing = db.query(Purchase).filter(
-        Purchase.user_id == user_id,
+        Purchase.user_id == session_user_id,
         Purchase.document_id == file_id
     ).first()
 
     if not existing:
         new_purchase = Purchase(
-            user_id=user_id,
+            user_id=session_user_id,
             document_id=file_id,
             purchased_at=datetime.utcnow()
         )
         db.add(new_purchase)
         db.commit()
 
+    # 🧩 Kiểm tra file tồn tại
     document = get_document_by_id(file_id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
+    # 🧩 Tạo URL download động
     base_url = str(request.base_url).rstrip("/")
     download_url = f"{base_url}/download/{file_id}"
 
@@ -138,34 +139,34 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
     <html>
         <head><meta charset="utf-8" /><title>Download</title></head>
         <body style="font-family: Arial; text-align: center; margin-top: 80px; font-size: 20px; color: #222;">
-    <h2 style="font-size: 32px; color: #28a745;">✅ Payment Successful!</h2>
+            <h2 style="font-size: 32px; color: #28a745;">✅ Payment Successful!</h2>
 
-    <p style="font-size: 20px; max-width: 700px; margin: 20px auto;">
-        Your file <b>{document["filename"]}</b> is ready.<br>
-        If the file is not downloaded automatically, please right-click the button below and select <b>"Save link as..."</b>
-    </p>
+            <p style="font-size: 20px; max-width: 700px; margin: 20px auto;">
+                Your file <b>{document["filename"]}</b> is ready.<br>
+                If the file is not downloaded automatically, please click the button below.
+            </p>
 
-    <a href="{download_url}" 
-       style="background: #0070f3; 
-              color: white; 
-              padding: 14px 28px; 
-              border-radius: 8px; 
-              text-decoration: none; 
-              font-size: 22px; 
-              display: inline-block;
-              margin-top: 20px;">
-       ⬇️ Download File
-    </a>
+            <a href="{download_url}" 
+               style="background: #0070f3; 
+                      color: white; 
+                      padding: 14px 28px; 
+                      border-radius: 8px; 
+                      text-decoration: none; 
+                      font-size: 22px; 
+                      display: inline-block;
+                      margin-top: 20px;">
+               ⬇️ Download File
+            </a>
 
-    <script>
-        setTimeout(() => {{
-            window.location = "{download_url}";
-        }}, 1000);
-    </script>
-</body>
-
+            <script>
+                setTimeout(() => {{
+                    window.location = "{download_url}";
+                }}, 1000);
+            </script>
+        </body>
     </html>
     """
+
     return HTMLResponse(content=html_content)
 
 
