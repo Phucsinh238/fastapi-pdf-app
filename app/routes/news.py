@@ -228,12 +228,12 @@ async def update_news(
         base_domain = base_url.replace("https://", "").replace("http://", "")
 
     # Nếu link có chứa domain của mình → chỉ giữ phần sau domain
-    if base_domain in link:
+   if base_domain in link:
         parts = link.split(base_domain, 1)
         link = parts[-1] if len(parts) > 1 else link
 
     # Đảm bảo luôn bắt đầu bằng "/"
-    if not link.startswith("/"):
+   if not link.startswith("/"):
         link = "/" + link
 
 
