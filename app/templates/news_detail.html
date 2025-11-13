@@ -19,16 +19,14 @@
     {{ news.content | safe }}
   </div>
 
-
- {% if news.link %}
-    <div class="mt-4 p-3 border rounded bg-light">
+  {% if full_link %}
+    <div class="mt-4 p-3 border rounded bg-light shadow-sm">
       <h5 class="mb-2">🔗 Please click attached link:</h5>
-      <a href="{{ news.link }}" target="_blank" class="text-break">
-        {{ news.link }}
+      <a href="{{ full_link }}" target="_blank" class="text-break">
+        {{ full_link }}
       </a>
     </div>
   {% endif %}
-
   
   <a href="/" class="btn btn-outline-primary mt-3">⬅ Back to Home</a>
 </body>
