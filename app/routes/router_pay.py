@@ -43,12 +43,13 @@ def create_payment(file_id: int, request: Request):
 
     price = float(document.get("price", 19.99))
     base_url = str(request.base_url).rstrip("/")
-
+    user_id = request.session.get("user_id")
+    
     payment = paypalrestsdk.Payment({
         "intent": "sale",
         "payer": {"payment_method": "paypal"},
         "redirect_urls": {
-            "return_url": f"{base_url}/payment/success?file_id={file_id}",
+            "return_url": f"{base_url}/payment/success?file_id={file_id}&user_id={user_id}",
             "cancel_url": f"{base_url}/payment/cancel"
         },
         "transactions": [{
@@ -83,10 +84,21 @@ def payment_success(request: Request, paymentId: str, PayerID: str, file_id: int
         raise HTTPException(status_code=400, detail="Payment failed.")
 
     # 🧩 Kiểm tra user đăng nhập
-    user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="User must be logged in to complete payment.")
+    #user_id = request.session.get("user_id")
+    #if not user_id:
+    #    raise HTTPException(status_code=401, detail="User must be logged in to complete payment.")
 
+ # 🧩 Nếu mất session → thử lấy user_id từ query string
+    session_user = request.session.get("user_id")
+    if not session_user:
+        if user_id:
+            session_user = user_id
+            request.session["user_id"] = user_id  # gắn lại cho các request sau
+        else:
+            raise HTTPException(status_code=401, detail="User must be logged in to complete payment.")
+
+
+    
     # 🧩 Ghi vào session cũ
     if "paid_files" not in request.session:
         request.session["paid_files"] = []
