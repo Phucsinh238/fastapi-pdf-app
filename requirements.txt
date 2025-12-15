@@ -45,3 +45,5 @@ sqlalchemy
 psycopg2-binary
 boto3
 pymupdf
+PyPDF2>=3.0
+reportlab>=3.6
