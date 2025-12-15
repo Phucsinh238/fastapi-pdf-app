@@ -7,6 +7,9 @@ from app.models import Purchase, User, Document
 import boto3, io
 from datetime import datetime
 
+from PyPDF2 import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
+
 # ==============================
 # 🔧 Config PayPal (LIVE)
 # ==============================
@@ -176,6 +179,68 @@ def payment_cancel(request: Request):
     request.session["flash"] = "❌ Bạn đã hủy thanh toán."
     base_url = str(request.base_url).rstrip("/")
     return RedirectResponse(url=base_url, status_code=303)
+
+
+
+
+def create_dynamic_watermark(text, width, height):
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(width, height))
+
+    c.saveState()
+    c.setFillAlpha(0.12)      # độ mờ
+    c.setFont("Helvetica", 28)
+    c.rotate(45)
+
+    # Lặp watermark phủ toàn trang
+    for x in range(-int(width), int(width * 1.5), 250):
+        for y in range(-int(height), int(height * 1.5), 150):
+            c.drawString(x, y, text)
+
+    c.restoreState()
+    c.save()
+    buffer.seek(0)
+    return buffer
+
+
+def apply_watermark_to_pdf(original_pdf_bytes, username, email):
+    reader = PdfReader(original_pdf_bytes)
+    writer = PdfWriter()
+
+    watermark_text = f"{username} | {email}"
+
+    for page in reader.pages:
+        # Lấy kích thước trang thật
+        width = float(page.mediabox.width)
+        height = float(page.mediabox.height)
+
+        # Tạo watermark theo đúng size trang này
+        wm_pdf_buf = create_dynamic_watermark(watermark_text, width, height)
+        wm_reader = PdfReader(wm_pdf_buf)
+        wm_page = wm_reader.pages[0]
+
+        # Merge watermark
+        page.merge_page(wm_page)
+
+        writer.add_page(page)
+
+    # KHÓA PDF (disable copy / print)
+    writer.encrypt(
+        user_password="",
+        owner_password="secret123",
+        permissions={
+            "print": False,
+            "copy": False,
+            "modify": False,
+            "annotate": False
+        }
+    )
+
+    out = io.BytesIO()
+    writer.write(out)
+    out.seek(0)
+    return out
+
 
 
 # 📥 Download file (check login + quyền)
