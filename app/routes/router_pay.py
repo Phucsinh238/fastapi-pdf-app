@@ -186,12 +186,12 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
     if not user_id:
         raise HTTPException(status_code=401, detail="You must be logged in to download files.")
 
-    # 🧩 Lấy file
+    # 🧩 Lấy document
     document = db.query(Document).filter(Document.id == file_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    # 🧩 Kiểm tra quyền tải
+    # 🧩 Kiểm tra quyền
     purchase = db.query(Purchase).filter(
         Purchase.user_id == user_id,
         Purchase.document_id == file_id
@@ -203,16 +203,25 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
     if not purchase and not is_uploader:
         raise HTTPException(status_code=403, detail="You do not have access to this file.")
 
-    # 🧩 Tải file từ R2
-    file_obj = io.BytesIO()
+    # 🧩 Tải PDF gốc từ Cloudflare R2
+    original_pdf = io.BytesIO()
     try:
-        s3.download_fileobj(R2_BUCKET, document.filepath, file_obj)
+        s3.download_fileobj(R2_BUCKET, document.filepath, original_pdf)
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
 
-    file_obj.seek(0)
+    original_pdf.seek(0)
+
+    # 🧩 Áp watermark cá nhân
+    watermarked_pdf = apply_watermark_to_pdf(
+        original_pdf_bytes=original_pdf,
+        username=user.username,
+        email=user.email
+    )
+
+    # 🧩 Trả file PDF đã watermark
     return StreamingResponse(
-        file_obj,
-        media_type="application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{document.filename}"'}
+        watermarked_pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename=\"{document.filename}\"'}
     )
