@@ -10,6 +10,9 @@ from datetime import datetime
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
+
+import fitz  # PyMuPDF
+
 # ==============================
 # 🔧 Config PayPal (LIVE)
 # ==============================
@@ -183,63 +186,44 @@ def payment_cancel(request: Request):
 
 
 
-def create_dynamic_watermark(text, width, height):
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=(width, height))
-
-    c.saveState()
-    c.setFillAlpha(0.12)      # độ mờ
-    c.setFont("Helvetica", 28)
-    c.rotate(45)
-
-    # Lặp watermark phủ toàn trang
-    for x in range(-int(width), int(width * 1.5), 250):
-        for y in range(-int(height), int(height * 1.5), 150):
-            c.drawString(x, y, text)
-
-    c.restoreState()
-    c.save()
-    buffer.seek(0)
-    return buffer
-
 
 def apply_watermark_to_pdf(original_pdf_bytes, username, email):
-    reader = PdfReader(original_pdf_bytes)
-    writer = PdfWriter()
+    pdf_data = original_pdf_bytes.read()
+    doc = fitz.open(stream=pdf_data, filetype="pdf")
 
-    watermark_text = f"{username} | {email}"
+    wm_text = f"{username} | {email} | DO NOT SHARE"
 
-    for page in reader.pages:
-        # Lấy kích thước trang thật
-        width = float(page.mediabox.width)
-        height = float(page.mediabox.height)
+    for page in doc:
+        rect = page.rect
+        angle = 45
 
-        # Tạo watermark theo đúng size trang này
-        wm_pdf_buf = create_dynamic_watermark(watermark_text, width, height)
-        wm_reader = PdfReader(wm_pdf_buf)
-        wm_page = wm_reader.pages[0]
+        for x in range(0, int(rect.width), 250):
+            for y in range(0, int(rect.height), 150):
+                page.insert_text(
+                    fitz.Point(x, y),
+                    wm_text,
+                    fontsize=22,
+                    rotate=angle,
+                    color=(0, 0, 0),
+                    fill_opacity=0.18,
+                    overlay=True   # 🔥 LUÔN VẼ TRÊN CÙNG
+                )
 
-        # Merge watermark
-        page.merge_page(wm_page)
-
-        writer.add_page(page)
-
-    # KHÓA PDF (disable copy / print)
-    writer.encrypt(
-        user_password="",
-        owner_password="secret123",
-        permissions={
-            "print": False,
-            "copy": False,
-            "modify": False,
-            "annotate": False
-        }
+    # 🔒 Khóa PDF (disable copy / print)
+    doc.save(
+        "output",
+        encryption=fitz.PDF_ENCRYPT_AES_256,
+        owner_pw="OWNER_SECRET_2025",
+        permissions=int(
+            fitz.PDF_PERM_ACCESSIBILITY |
+            fitz.PDF_PERM_ANNOTATE |
+            fitz.PDF_PERM_FORM
+        )
     )
 
-    out = io.BytesIO()
-    writer.write(out)
-    out.seek(0)
-    return out
+    output = io.BytesIO(doc.write())
+    output.seek(0)
+    return output
 
 
 
