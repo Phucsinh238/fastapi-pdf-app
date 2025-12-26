@@ -10,7 +10,7 @@ from datetime import datetime
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
-
+import math
 import fitz  # PyMuPDF
 
 # ==============================
@@ -188,40 +188,65 @@ def payment_cancel(request: Request):
 
 
 def apply_watermark_to_pdf(original_pdf_bytes, username, email):
+    # ===== DEBUG: kiểm tra dữ liệu user =====
+    print("🔥 Watermark for user:")
+    print("   username =", username)
+    print("   email    =", email)
+
     pdf_data = original_pdf_bytes.read()
     doc = fitz.open(stream=pdf_data, filetype="pdf")
 
     wm_text = f"{username} | {email} | DO NOT SHARE"
 
+    # ===== matrix xoay 45 độ (CÁCH ĐÚNG) =====
+    angle = 45
+    rad = math.radians(angle)
+    matrix = fitz.Matrix(
+        math.cos(rad), math.sin(rad),
+        -math.sin(rad), math.cos(rad),
+        0, 0
+    )
+
     for page in doc:
         rect = page.rect
-        angle = 45
+        x_step = 420
+        y_step = 260
+        y_index = 0
 
-        for x in range(0, int(rect.width), 250):
-            for y in range(0, int(rect.height), 150):
+        for y in range(-int(rect.height), int(rect.height * 1.5), y_step):
+            x_offset = 0 if y_index % 2 == 0 else x_step // 2
+
+            for x in range(-int(rect.width) + x_offset,
+                           int(rect.width * 1.5),
+                           x_step):
                 page.insert_text(
                     fitz.Point(x, y),
                     wm_text,
-                    fontsize=22,
-                    rotate=angle,
+                    fontsize=18,          # nhỏ
                     color=(0, 0, 0),
-                    fill_opacity=0.18,
-                    overlay=True   # 🔥 LUÔN VẼ TRÊN CÙNG
+                    fill_opacity=0.12,    # mờ
+                    overlay=True,
+                    morph=(fitz.Point(0, 0), matrix)
                 )
+            y_index += 1
 
-    # 🔒 Khóa PDF (disable copy / print)
-    doc.save(
-        "output",
-        encryption=fitz.PDF_ENCRYPT_AES_256,
-        owner_pw="OWNER_SECRET_2025",
-        permissions=int(
-            fitz.PDF_PERM_ACCESSIBILITY |
-            fitz.PDF_PERM_ANNOTATE |
-            fitz.PDF_PERM_FORM
+    # ===== GHI PDF + KHÓA (AES-128) =====
+    output = io.BytesIO(
+        doc.write(
+            encryption=fitz.PDF_ENCRYPT_AES_128,
+            owner_pw="OWNER_SECRET_2025",
+            user_pw="",
+            permissions=(
+                fitz.PDF_PERM_ACCESSIBILITY |
+                fitz.PDF_PERM_FORM
+                # ❌ no print
+                # ❌ no copy
+                # ❌ no modify
+            )
         )
     )
 
-    output = io.BytesIO(doc.write())
+    doc.close()
     output.seek(0)
     return output
 
