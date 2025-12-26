@@ -257,6 +257,7 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
 def download_file(request: Request, file_id: int, db: Session = Depends(get_db)):
     # 🧩 Kiểm tra login
     user_id = request.session.get("user_id")
+    print("🔥🔥🔥 KOYEB VERSION 2025-01-16 WATERMARK ACTIVE")
     if not user_id:
         raise HTTPException(status_code=401, detail="You must be logged in to download files.")
 
