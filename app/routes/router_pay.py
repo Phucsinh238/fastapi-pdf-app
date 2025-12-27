@@ -279,15 +279,29 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=403, detail="You do not have access to this file.")
 
     # 🧩 Tải PDF gốc từ Cloudflare R2
-    original_pdf = io.BytesIO()
-    try:
-        s3.download_fileobj(R2_BUCKET, document.filepath, original_pdf)
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
+    #original_pdf = io.BytesIO()
+    #try:
+    #    s3.download_fileobj(R2_BUCKET, document.filepath, original_pdf)
+    #except Exception as e:
+    #    raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
+    #original_pdf.seek(0)
 
-    original_pdf.seek(0)
+
+ # 🔥 ÉP STREAM → FULL BYTES (CỰC KỲ QUAN TRỌNG)
+    tmp_buffer.seek(0)
+    pdf_bytes = tmp_buffer.read()
+
+    print("🔥 PDF size from R2:", len(pdf_bytes))
+
+    if len(pdf_bytes) < 1000:
+        raise HTTPException(status_code=500, detail="Downloaded PDF is invalid or empty")
+
+    original_pdf = io.BytesIO(pdf_bytes)
 
     # 🧩 Áp watermark cá nhân
+    print(f"🔥 Watermark user = {user.username} | {user.email}")
+
+
     watermarked_pdf = apply_watermark_to_pdf(
         original_pdf_bytes=original_pdf,
         username=user.username,
