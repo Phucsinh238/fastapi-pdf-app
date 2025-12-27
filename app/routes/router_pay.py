@@ -188,17 +188,15 @@ def payment_cancel(request: Request):
 
 
 def apply_watermark_to_pdf(original_pdf_bytes, username, email):
-    # ===== DEBUG: kiểm tra dữ liệu user =====
-    print("🔥 Watermark for user:")
-    print("   username =", username)
-    print("   email    =", email)
+    import fitz, io, math
+
+    print("🔥 Watermark for user:", username, email)
 
     pdf_data = original_pdf_bytes.read()
     doc = fitz.open(stream=pdf_data, filetype="pdf")
 
     wm_text = f"{username} | {email} | DO NOT SHARE"
 
-    # ===== matrix xoay 45 độ (CÁCH ĐÚNG) =====
     angle = 45
     rad = math.radians(angle)
     matrix = fitz.Matrix(
@@ -222,32 +220,30 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
                 page.insert_text(
                     fitz.Point(x, y),
                     wm_text,
-                    fontsize=18,          # nhỏ
+                    fontsize=18,
                     color=(0, 0, 0),
-                    fill_opacity=0.12,    # mờ
+                    fill_opacity=0.12,
                     overlay=True,
                     morph=(fitz.Point(0, 0), matrix)
                 )
             y_index += 1
 
-    # ===== GHI PDF + KHÓA (AES-128) =====
-    output = io.BytesIO(
-        doc.write(
-            encryption=fitz.PDF_ENCRYPT_AES_128,
-            owner_pw="OWNER_SECRET_2025",
-            user_pw="",
-            permissions=(
-                fitz.PDF_PERM_ACCESSIBILITY |
-                fitz.PDF_PERM_FORM
-                # ❌ no print
-                # ❌ no copy
-                # ❌ no modify
-            )
+    # ✅ CHỈ DÙNG doc.save(BytesIO)
+    output = io.BytesIO()
+    doc.save(
+        output,
+        encryption=fitz.PDF_ENCRYPT_AES_128,
+        owner_pw="OWNER_SECRET_2025",
+        permissions=(
+            fitz.PDF_PERM_ACCESSIBILITY |
+            fitz.PDF_PERM_FORM
         )
     )
-
     doc.close()
+
     output.seek(0)
+    print("✅ Watermark PDF generated")
+
     return output
 
 
@@ -288,6 +284,24 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
 
 
  # 🔥 ÉP STREAM → FULL BYTES (CỰC KỲ QUAN TRỌNG)
+ #   tmp_buffer.seek(0)
+ #   pdf_bytes = tmp_buffer.read()
+
+ #   print("🔥 PDF size from R2:", len(pdf_bytes))
+
+ #   if len(pdf_bytes) < 1000:
+ #       raise HTTPException(status_code=500, detail="Downloaded PDF is invalid or empty")
+
+ #   original_pdf = io.BytesIO(pdf_bytes)
+
+
+
+    tmp_buffer = io.BytesIO()
+    try:
+        s3.download_fileobj(R2_BUCKET, document.filepath, tmp_buffer)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"File not found in R2: {str(e)}")
+
     tmp_buffer.seek(0)
     pdf_bytes = tmp_buffer.read()
 
@@ -297,6 +311,8 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
         raise HTTPException(status_code=500, detail="Downloaded PDF is invalid or empty")
 
     original_pdf = io.BytesIO(pdf_bytes)
+
+
 
     # 🧩 Áp watermark cá nhân
     print(f"🔥 Watermark user = {user.username} | {user.email}")
