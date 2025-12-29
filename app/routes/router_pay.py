@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.models import Purchase, User, Document
 import boto3, io
 from datetime import datetime
-
+import time
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
@@ -139,8 +139,11 @@ def payment_success(
 
     # 🧩 Tạo URL download động
     base_url = str(request.base_url).rstrip("/")
-    download_url = f"{base_url}/download/{file_id}"
+    #download_url = f"{base_url}/download/{file_id}"
+    download_url = f"{base_url}/download/{file_id}?t={int(time.time())}"
 
+
+    
     html_content = f"""
     <html>
         <head><meta charset="utf-8" /><title>Download</title></head>
@@ -295,7 +298,6 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
  #   original_pdf = io.BytesIO(pdf_bytes)
 
 
-
     tmp_buffer = io.BytesIO()
     try:
         s3.download_fileobj(R2_BUCKET, document.filepath, tmp_buffer)
@@ -325,8 +327,19 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
     )
 
     # 🧩 Trả file PDF đã watermark
-    return StreamingResponse(
+    #return StreamingResponse(
+    #    watermarked_pdf,
+    #    media_type="application/pdf",
+    #    headers={"Content-Disposition": f'attachment; filename=\"{document.filename}\"'}
+    #)
+
+       return StreamingResponse(
         watermarked_pdf,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename=\"{document.filename}\"'}
+        headers={
+            "Content-Disposition": f'attachment; filename="{document.filename}"',
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
     )
