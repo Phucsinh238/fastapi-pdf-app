@@ -187,8 +187,9 @@ def payment_cancel(request: Request):
     return RedirectResponse(url=base_url, status_code=303)
 
 
-def apply_watermark_to_pdf(original_pdf_bytes, username, email):
 
+def apply_watermark_to_pdf(original_pdf_bytes, username, email):
+    import fitz, io
 
     print("🔥 Watermark for user:", username, email)
 
@@ -197,31 +198,46 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
 
     wm_text = f"{username} | {email} | DO NOT SHARE"
 
+    fontname = "helv"
+    fontsize = 18
+
+    # 🔑 TÍNH CHIỀU DÀI TEXT
+    text_width = fitz.get_text_length(
+        wm_text,
+        fontname=fontname,
+        fontsize=fontsize
+    )
+
+    # 🔑 STEP PHỤ THUỘC TEXT
+    x_step = int(text_width + 120)
+    y_step = int(fontsize * 10)
+
     for page in doc:
         rect = page.rect
 
-        x_step = 500
-        y_step = 350
+        # ✅ XOAY 45°
+        matrix = fitz.Matrix(1, 1).prerotate(45)
 
-        for y in range(0, int(rect.height), y_step):
-            for x in range(0, int(rect.width), x_step):
+        y_index = 0
+        for y in range(-int(rect.height), int(rect.height * 1.5), y_step):
+            x_offset = 0 if y_index % 2 == 0 else x_step // 2
 
-                text_rect = fitz.Rect(
-                    x, y,
-                    x + 400,
-                    y + 200
-                )
-
-                page.insert_textbox(
-                    text_rect,
+            for x in range(
+                -int(rect.width) + x_offset,
+                int(rect.width * 1.5),
+                x_step
+            ):
+                page.insert_text(
+                    fitz.Point(x, y),
                     wm_text,
-                    fontsize=18,
+                    fontname=fontname,
+                    fontsize=fontsize,
                     color=(0, 0, 0),
                     fill_opacity=0.12,
-                    rotate=45,               # ✅ XOAY TẠI ĐÂY
-                    align=fitz.TEXT_ALIGN_CENTER,
-                    overlay=True
+                    overlay=True,
+                    morph=(fitz.Point(0, 0), matrix)
                 )
+            y_index += 1
 
     output = io.BytesIO()
     doc.save(
