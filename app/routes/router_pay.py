@@ -189,7 +189,6 @@ def payment_cancel(request: Request):
 
 
 def apply_watermark_to_pdf(original_pdf_bytes, username, email):
-    import fitz, io
 
     print("🔥 Watermark for user:", username, email)
 
