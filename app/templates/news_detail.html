@@ -15,8 +15,11 @@
          alt="{{ news.title }}">
   {% endif %}
 
+
+  
   <div class="mt-3">
-    {{ news.content | safe }}
+           <!-- {{ news.content | safe }} -->
+    {{ news.content | replace('\n', '<br>') | safe }}
   </div>
 
   {% if full_link %}
