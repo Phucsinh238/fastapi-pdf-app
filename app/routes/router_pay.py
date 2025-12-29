@@ -333,7 +333,7 @@ def download_file(request: Request, file_id: int, db: Session = Depends(get_db))
     #    headers={"Content-Disposition": f'attachment; filename=\"{document.filename}\"'}
     #)
 
-       return StreamingResponse(
+    return StreamingResponse(
         watermarked_pdf,
         media_type="application/pdf",
         headers={
