@@ -187,9 +187,8 @@ def payment_cancel(request: Request):
     return RedirectResponse(url=base_url, status_code=303)
 
 
-
 def apply_watermark_to_pdf(original_pdf_bytes, username, email):
-    import fitz, io, math
+
 
     print("🔥 Watermark for user:", username, email)
 
@@ -198,17 +197,10 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
 
     wm_text = f"{username} | {email} | DO NOT SHARE"
 
-    angle = 45
-    rad = math.radians(angle)
-    matrix = fitz.Matrix(
-        math.cos(rad), math.sin(rad),
-        -math.sin(rad), math.cos(rad)
-    )
-
     for page in doc:
         rect = page.rect
 
-        x_step = 500     # 🔥 tăng khoảng cách
+        x_step = 500
         y_step = 350
 
         for y in range(0, int(rect.height), y_step):
@@ -216,7 +208,8 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
 
                 text_rect = fitz.Rect(
                     x, y,
-                    x + 400, y + 200   # 🔥 bounding box đủ lớn
+                    x + 400,
+                    y + 200
                 )
 
                 page.insert_textbox(
@@ -225,7 +218,7 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
                     fontsize=18,
                     color=(0, 0, 0),
                     fill_opacity=0.12,
-                    rotate=45,
+                    rotate=45,               # ✅ XOAY TẠI ĐÂY
                     align=fitz.TEXT_ALIGN_CENTER,
                     overlay=True
                 )
