@@ -188,8 +188,6 @@ def payment_cancel(request: Request):
 
 
 
-
-
 def apply_watermark_to_pdf(original_pdf_bytes, username, email):
     import fitz, io, math
 
@@ -204,34 +202,34 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
     rad = math.radians(angle)
     matrix = fitz.Matrix(
         math.cos(rad), math.sin(rad),
-        -math.sin(rad), math.cos(rad),
-        0, 0
+        -math.sin(rad), math.cos(rad)
     )
 
     for page in doc:
         rect = page.rect
-        x_step = 420
-        y_step = 260
-        y_index = 0
 
-        for y in range(-int(rect.height), int(rect.height * 1.5), y_step):
-            x_offset = 0 if y_index % 2 == 0 else x_step // 2
+        x_step = 500     # 🔥 tăng khoảng cách
+        y_step = 350
 
-            for x in range(-int(rect.width) + x_offset,
-                           int(rect.width * 1.5),
-                           x_step):
-                page.insert_text(
-                    fitz.Point(x, y),
+        for y in range(0, int(rect.height), y_step):
+            for x in range(0, int(rect.width), x_step):
+
+                text_rect = fitz.Rect(
+                    x, y,
+                    x + 400, y + 200   # 🔥 bounding box đủ lớn
+                )
+
+                page.insert_textbox(
+                    text_rect,
                     wm_text,
                     fontsize=18,
                     color=(0, 0, 0),
                     fill_opacity=0.12,
-                    overlay=True,
-                    morph=(fitz.Point(0, 0), matrix)
+                    rotate=45,
+                    align=fitz.TEXT_ALIGN_CENTER,
+                    overlay=True
                 )
-            y_index += 1
 
-    # ✅ CHỈ DÙNG doc.save(BytesIO)
     output = io.BytesIO()
     doc.save(
         output,
