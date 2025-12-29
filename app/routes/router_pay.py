@@ -140,7 +140,7 @@ def payment_success(
     # 🧩 Tạo URL download động
     base_url = str(request.base_url).rstrip("/")
     #download_url = f"{base_url}/download/{file_id}"
-    download_url = f"{base_url}/download/{file_id}?t={int(time.time())}"
+    download_url = f"{base_url}/secure-download/{file_id}?t={int(time.time())}"
 
 
     
@@ -252,7 +252,7 @@ def apply_watermark_to_pdf(original_pdf_bytes, username, email):
 
 
 # 📥 Download file (check login + quyền)
-@router.get("/download/{file_id}")
+@router.get("/secure-download/{file_id}")
 def download_file(request: Request, file_id: int, db: Session = Depends(get_db)):
     # 🧩 Kiểm tra login
     user_id = request.session.get("user_id")
