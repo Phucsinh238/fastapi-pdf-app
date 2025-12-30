@@ -183,7 +183,7 @@
                       {% endif %}
                     
                   </div>
-                  <p class="card-meta mb-2">📤 {{ doc.uploaded_by or 'Unknown' }} • ⏰ {{ doc.upload_time }}</p>
+                  <p class="card-meta mb-2">📤 {{ doc.uploaded_by or 'AgriReports' }} • ⏰ {{ doc.upload_time }}</p>
 
                   <!-- preview thumbnail if exists -->
                   {% set preview_path = '/static/previews/' ~ doc.id ~ '.png' %}
@@ -287,7 +287,7 @@
       <div class="small text-white-50">
         &copy; {{ current_year or 2025 }} AgriReports &middot;
         <a href="/" class="text-white-50">About</a> &middot;
-        <a href="/" class="text-white-50">Policy</a>
+        <a href="/" class="text-white-50">Policy</a> &middot;
         <a href="mailto:agrireports999@gmail.com"
            class="text-white-50"
            target="_blank">
