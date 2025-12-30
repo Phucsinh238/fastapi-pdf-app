@@ -184,7 +184,16 @@ def edit_news_form(news_id: int, request: Request, db: Session = Depends(get_db)
     if not news:
         return RedirectResponse("/admin/news", status_code=303)
 
-    return templates.TemplateResponse("news_edit.html", {"request": request, "news": news})
+ # 🔗 Build full link nếu link là relative
+    full_link = ""
+    if news.link:
+        if news.link.startswith("http"):
+            full_link = news.link
+        else:
+            base_url = str(request.base_url).rstrip("/")
+            full_link = f"{base_url}{news.link}"
+    
+    return templates.TemplateResponse("news_edit.html", {"request": request, "news": news, "full_link": full_link})
 
 
 @router.post("/admin/news/edit/{news_id}")
