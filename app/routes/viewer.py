@@ -69,13 +69,13 @@ def home(
     NEWS_PER_PAGE = 6
 
     # Tổng số news
-    total_news = db.query(News).count()
+    total_news = db.query(news).count()
     news_total_pages = (
         math.ceil(total_news / NEWS_PER_PAGE) if total_news else 1
     )
 
     news_query = (
-        db.query(News)
+        db.query(news)
         .order_by(
             News.priority.desc(),      # ⭐ ưu tiên
             News.created_at.desc()     # ⭐ thời gian
