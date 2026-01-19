@@ -100,3 +100,4 @@ class News(Base):
     image_url = Column(String)
     link = Column(String)  # 🔗 Thêm cột link
     created_at = Column(DateTime, default=datetime.now)
+    priority = Column(Integer, default=0)
