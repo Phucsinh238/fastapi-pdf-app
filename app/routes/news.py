@@ -158,20 +158,27 @@ def admin_news_list(
     pages = ceil(total / per_page)
 
     news_list = (
-        query.order_by(News.created_at.desc())
+        query
+        .order_by(
+            News.priority.desc(),     # ⭐ Ưu tiên trước
+            News.created_at.desc()    # ⭐ Sau đó theo thời gian
+        )
         .offset((page - 1) * per_page)
         .limit(per_page)
         .all()
     )
 
-    return templates.TemplateResponse("news_admin_list.html", {
-        "request": request,
-        "news_list": news_list,
-        "page": page,
-        "pages": pages,
-        "total": total,
-        "search": search
-    })
+    return templates.TemplateResponse(
+        "news_admin_list.html",
+        {
+            "request": request,
+            "news_list": news_list,
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "search": search
+        }
+    )
 
 
 # ---------------- Sửa tin ----------------
