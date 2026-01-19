@@ -42,11 +42,15 @@ s3 = boto3.client(
 def home(
     request: Request,
     page: int = Query(1, ge=1),
-    news_page: int = Query(1, ge=1)  # thêm phân trang cho news
+    news_page: int = Query(1, ge=1),
+    db: Session = Depends(get_db)
 ):
+    # ====== Documents ======
     with engine.connect() as conn:
-        # ====== Documents ======
-        total_docs = conn.execute(text("SELECT COUNT(*) FROM documents")).scalar() or 0
+        total_docs = conn.execute(
+            text("SELECT COUNT(*) FROM documents")
+        ).scalar() or 0
+
         total_pages = math.ceil(total_docs / ITEMS_PER_PAGE) if total_docs else 1
         offset = (page - 1) * ITEMS_PER_PAGE
 
@@ -61,29 +65,47 @@ def home(
         )
         documents = result.mappings().all()
 
-    # ====== News phân trang ======
+    # ====== News ======
     NEWS_PER_PAGE = 6
-    all_news = get_news(limit=9999)   # lấy tất cả, hoặc viết query riêng cho phân trang
-    total_news = len(all_news)
-    news_total_pages = math.ceil(total_news / NEWS_PER_PAGE) if total_news else 1
 
-    start = (news_page - 1) * NEWS_PER_PAGE
-    end = start + NEWS_PER_PAGE
-    news_paginated = all_news[start:end]
+    # Tổng số news
+    total_news = db.query(News).count()
+    news_total_pages = (
+        math.ceil(total_news / NEWS_PER_PAGE) if total_news else 1
+    )
+
+    news_query = (
+        db.query(News)
+        .order_by(
+            News.priority.desc(),      # ⭐ ưu tiên
+            News.created_at.desc()     # ⭐ thời gian
+        )
+    )
+
+    news_paginated = (
+        news_query
+        .offset((news_page - 1) * NEWS_PER_PAGE)
+        .limit(NEWS_PER_PAGE)
+        .all()
+    )
 
     news_main = news_paginated[0] if news_paginated else None
     news_list = news_paginated[1:] if len(news_paginated) > 1 else []
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "documents": documents,
-        "page": page,
-        "total_pages": total_pages,
-        "news_main": news_main,
-        "news_list": news_list,
-        "news_page": news_page,
-        "news_total_pages": news_total_pages
-    })
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "documents": documents,
+            "page": page,
+            "total_pages": total_pages,
+            "news_main": news_main,
+            "news_list": news_list,
+            "news_page": news_page,
+            "news_total_pages": news_total_pages,
+        }
+    )
+
 
 
 # 📄 Xem file (PDF hoặc preview)
