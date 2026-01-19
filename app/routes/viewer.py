@@ -14,7 +14,7 @@ from app.models import Purchase, User, Document
 from app.database import get_db
 from sqlalchemy.orm import Session
 from fastapi import Depends
-
+from app.models import News
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -69,13 +69,13 @@ def home(
     NEWS_PER_PAGE = 6
 
     # Tổng số news
-    total_news = db.query(news).count()
+    total_news = db.query(News).count()
     news_total_pages = (
         math.ceil(total_news / NEWS_PER_PAGE) if total_news else 1
     )
 
     news_query = (
-        db.query(news)
+        db.query(News)
         .order_by(
             News.priority.desc(),      # ⭐ ưu tiên
             News.created_at.desc()     # ⭐ thời gian
