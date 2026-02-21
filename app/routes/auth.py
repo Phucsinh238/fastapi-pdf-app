@@ -100,7 +100,7 @@ async def register(
 
     return templates.TemplateResponse("message.html", {
         "request": request,
-        "message": "✅ Registration successful! Please check your email to verify your account."
+        "message": "✅ Registration successful! Please check your email to verify your account. If not found, please check mail in Spam mail or junk mail"
     })
 
 
