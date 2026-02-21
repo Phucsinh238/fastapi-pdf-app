@@ -139,7 +139,7 @@ def payment_success(
 
     # 🧩 Tạo URL download động
     base_url = str(request.base_url).rstrip("/")
-    #download_url = f"{base_url}/secure-download/{file_id}"
+    download_url = f"{base_url}/secure-download/{file_id}"
     #download_url = f"{base_url}/secure-download/{file_id}?t={int(time.time())}"
 
 
