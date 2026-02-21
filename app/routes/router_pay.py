@@ -13,6 +13,9 @@ from reportlab.pdfgen import canvas
 import math
 import fitz  # PyMuPDF
 
+from fastapi_mail import FastMail, MessageSchema
+from app.routes.auth import conf   # dùng lại SMTP config đã có
+
 # ==============================
 # 🔧 Config PayPal (LIVE)
 # ==============================
@@ -89,7 +92,7 @@ def create_payment(file_id: int, request: Request):
         raise HTTPException(status_code=500, detail="Payment creation failed.")
 
 @router.get("/payment/success")
-def payment_success(
+async def payment_success(
     request: Request,
     paymentId: str,
     PayerID: str,
@@ -142,7 +145,39 @@ def payment_success(
     download_url = f"{base_url}/secure-download/{file_id}"
     #download_url = f"{base_url}/secure-download/{file_id}?t={int(time.time())}"
 
+# 🧩 Lấy user
+user = db.query(User).filter(User.id == session_user_id).first()
 
+if user:
+    try:
+        message = MessageSchema(
+            subject="Payment Successful - Download Link",
+            recipients=[user.email],               # 📩 gửi cho user
+            cc=["agrireports999@gmail.com"],       # 📩 CC cho admin
+            body=f"""
+            <h2>Payment Successful ✅</h2>
+
+            <p><b>User:</b> {user.username}</p>
+            <p><b>Email:</b> {user.email}</p>
+            <p><b>File:</b> {document["filename"]}</p>
+
+            <p>Click below to download:</p>
+            <a href="{download_url}">{download_url}</a>
+
+            <br><br>
+            <small>This link requires login and will be watermarked.</small>
+            """,
+            subtype="html"
+        )
+
+        fm = FastMail(conf)
+        await fm.send_message(message)
+
+        print("✅ Email sent to user + admin CC")
+
+    except Exception as e:
+        print("❌ Email send failed:", str(e))
+        
     
     html_content = f"""
     <html>
