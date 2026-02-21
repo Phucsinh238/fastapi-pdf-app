@@ -145,12 +145,12 @@ async def payment_success(
     download_url = f"{base_url}/secure-download/{file_id}"
     #download_url = f"{base_url}/secure-download/{file_id}?t={int(time.time())}"
 
-# 🧩 Lấy user
-user = db.query(User).filter(User.id == session_user_id).first()
+    # 🧩 Lấy user
+    user = db.query(User).filter(User.id == session_user_id).first()
 
-if user:
-    try:
-        message = MessageSchema(
+    if user:
+        try:
+            message = MessageSchema(
             subject="Payment Successful - Download Link",
             recipients=[user.email],               # 📩 gửi cho user
             cc=["agrireports999@gmail.com"],       # 📩 CC cho admin
@@ -175,8 +175,8 @@ if user:
 
         print("✅ Email sent to user + admin CC")
 
-    except Exception as e:
-        print("❌ Email send failed:", str(e))
+        except Exception as e:
+            print("❌ Email send failed:", str(e))
         
     
     html_content = f"""
