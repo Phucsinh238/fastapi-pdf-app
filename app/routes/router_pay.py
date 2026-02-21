@@ -186,8 +186,8 @@ async def payment_success(
             <h2 style="font-size: 32px; color: #28a745;">✅ Payment Successful!</h2>
 
             <p style="font-size: 20px; max-width: 700px; margin: 20px auto;">
-                Your file <b>{document["filename"]}</b> is ready.<br>
-                If the file is not downloaded automatically, please click the button below.
+                Your file <b>{document["filename"]}</b> is ready and email with download link is sent to your mailbox/spambox<br>
+                If the file is not downloaded automatically, please click the button below or right click with save as
             </p>
 
             <a href="{download_url}" 
