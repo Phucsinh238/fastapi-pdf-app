@@ -151,29 +151,29 @@ async def payment_success(
     if user:
         try:
             message = MessageSchema(
-            subject="Payment Successful - Download Link",
-            recipients=[user.email],               # 📩 gửi cho user
-            cc=["agrireports999@gmail.com"],       # 📩 CC cho admin
-            body=f"""
-            <h2>Payment Successful ✅</h2>
+                subject="Payment Successful - Download Link",
+                recipients=[user.email],               # 📩 gửi cho user
+                cc=["agrireports999@gmail.com"],       # 📩 CC cho admin
+                body=f"""
+                <h2>Payment Successful ✅</h2>
 
-            <p><b>User:</b> {user.username}</p>
-            <p><b>Email:</b> {user.email}</p>
-            <p><b>File:</b> {document["filename"]}</p>
+                <p><b>User:</b> {user.username}</p>
+                <p><b>Email:</b> {user.email}</p>
+                <p><b>File:</b> {document["filename"]}</p>
 
-            <p>Click below to download:</p>
-            <a href="{download_url}">{download_url}</a>
+                <p>Click below to download:</p>
+                <a href="{download_url}">{download_url}</a>
 
-            <br><br>
-            <small>This link requires login and will be watermarked.</small>
-            """,
-            subtype="html"
-        )
+                <br><br>
+                <small>This link requires login and will be watermarked.</small>
+                """,
+                subtype="html"
+            )
 
-        fm = FastMail(conf)
-        await fm.send_message(message)
+            fm = FastMail(conf)
+            await fm.send_message(message)
 
-        print("✅ Email sent to user + admin CC")
+            print("✅ Email sent to user + admin CC")
 
         except Exception as e:
             print("❌ Email send failed:", str(e))
