@@ -114,14 +114,14 @@
   <div class="col-md-4 d-flex flex-column justify-content-center">
     <h2 class="fw-bold">{{ news_main.title }}</h2>
     <p>{{ news_main.summary[:250] }}{% if news_main.summary|length > 250 %}...{% endif %}</p>
-    <a href="/news/{{ news_main.id }}" class="btn btn-primary">Đọc tiếp</a>
+    <a href="/news/{{ news_main.id }}" class="btn btn-primary">Read more...</a>
   </div>
 </div>
 {% endif %}
 
 <!-- Other News -->
 {% if news_list %}
-<h3 class="mb-3">Tin tức khác</h3>
+<h3 class="mb-3">Other news</h3>
 <div class="list-group mb-5">
   {% for news in news_list[:6] %}
     <a href="/news/{{ news.id }}" 
