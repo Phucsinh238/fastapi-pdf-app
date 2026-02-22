@@ -188,7 +188,7 @@ async def payment_success(
             <p style="font-size: 20px; max-width: 700px; margin: 20px auto;">
                 Your file <b>{document["filename"]}</b> is ready and email with download link is sent to your mailbox/spambox<br>
                 If the file is not downloaded automatically, please click the button below or right click with save as<br>
-                If the download is fail because of big size pdf file, please go to mailbox/spambox and lick on link directly to download<br>
+                If the download is fail because of big size pdf file, please go to mailbox/spambox and lick on link directly two times or more to download<br>
                 Any support is need, please reply to email agrireports999@gmail.com
             </p>
 
