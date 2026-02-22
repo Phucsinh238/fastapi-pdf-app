@@ -221,7 +221,12 @@ def logout(request: Request):
 def get_current_user(request: Request, db: Session = Depends(get_db)):
     user_id = request.session.get("user_id")
     if not user_id:
-        raise HTTPException(status_code=401, detail="You must be logged in")
+       # raise HTTPException(status_code=401, detail="You must be logged in")
+         params = urlencode({"msg": "login_required"})
+        return RedirectResponse(
+            url=f"/login?{params}",
+            status_code=302
+        )
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
