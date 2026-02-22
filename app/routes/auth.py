@@ -222,8 +222,9 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     user_id = request.session.get("user_id")
     if not user_id:
        # raise HTTPException(status_code=401, detail="You must be logged in")
-         params = urlencode({"msg": "login_required"})
-         return RedirectResponse(url=f"/login?{params}",status_code=302)
+      
+        params = urlencode({"msg": "login_required"})
+        raise HTTPException(status_code=302,headers={"Location": f"/login?{params}"})
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
