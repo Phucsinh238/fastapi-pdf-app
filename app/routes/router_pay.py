@@ -153,7 +153,7 @@ async def payment_success(
             message = MessageSchema(
                 subject="Payment Successful - Download Link",
                 recipients=[user.email],               # 📩 gửi cho user
-                cc=["agrireports999@gmail.com"],       # 📩 CC cho admin
+                cc=["muabanraovat1982@gmail.com"],       # 📩 CC cho admin
                 body=f"""
                 <h2>Payment Successful ✅</h2>
 
@@ -189,7 +189,7 @@ async def payment_success(
                 Your file <b>{document["filename"]}</b> is ready and email with download link is sent to your mailbox/spambox<br>
                 If the file is not downloaded automatically, please click the button below or right click with save as<br>
                 If the download is fail because of big size pdf file, please go to mailbox/spambox and lick on link directly two times or more to download<br>
-                Any support is need, please reply to email muabanraovat1982@gmail.com
+                Any support is need, please reply email to muabanraovat1982@gmail.com
             </p>
 
             <a href="{download_url}" 
